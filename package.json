@@ -1,0 +1,27 @@
+{
+  "name": "cozystay-back",
+  "version": "1.0.0",
+  "description": "Repository for the Interdisplinary Project made in the scope of the Project II - 2nd year of the Degree in Technologies and Information Systems for the Web (TSIW) \r (ESMAD-P.PORTO)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pedro1221-dev/CozyStay-Back.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pedro1221-dev/CozyStay-Back/issues"
+  },
+  "homepage": "https://github.com/Pedro1221-dev/CozyStay-Back#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mysql2": "^3.9.7",
+    "sequelize": "^6.37.3"
+  }
+}
