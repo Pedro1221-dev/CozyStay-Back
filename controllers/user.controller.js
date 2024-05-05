@@ -1,3 +1,4 @@
+const bcrypt = require('bcrypt');
 const db = require("../models/index.js");
 // Define a variable User to represent the User model in the database
 const User = db.user;
