@@ -3,7 +3,7 @@ const db = require("../models/index.js");
 const User = db.user;
 
 //"Op" necessary for LIKE operator
-const { Op } = require('sequelize');
+const { Op, ValidationError } = require('sequelize');
 
 /**
  * Retrieves a list of users with optional pagination and filtering.
@@ -215,7 +215,48 @@ exports.delete = async (req, res) => {
 };
 
 
+// Update a tutorial
+exports.update = async (req, res) => {
+    try {
+        let user = await User.findByPk(req.params.user_id);
+        if (!user) {
+            return res.status(404).json({
+                success: false, msg: `User with ID ${req.params.user_id} not found.`
+            });
+        }
 
+        let affectedRows = await User.update(
+            req.body, { 
+                where: { 
+                    user_id: req.params.user_id
+                } 
+            });
+
+        if(affectedRows[0] === 0){
+            return res.status(404).json({
+                success: true, 
+                msg: `No updates were made to user with ID ${req.params.user_id}.`
+            });
+        }
+
+        return res.json({
+            success: true,
+            msg: `User with ID ${req.params.user_id} was updated successfully.`
+        });
+    }
+    catch (err) {
+        if (err instanceof ValidationError)
+            return res.status(400).json({ 
+                success: false, 
+                msg: err.errors.map(e => e.message) 
+            });
+
+        res.status(500).json({
+            success: false, 
+            msg: `Error retrieving user with ID ${req.params.user_id}.`
+        });
+    };
+};
 
   
   
