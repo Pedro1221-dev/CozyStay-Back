@@ -10,7 +10,7 @@ router.route('/')
 
 router.route('/:user_id')
     .get( userController.findOne ) 
-    // .delete ( usersController.xxx)
+    .delete ( userController.delete)
 
 router.route('/:user_id/properties')
     //.get( usersController.xxx ) 

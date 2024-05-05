@@ -136,7 +136,7 @@ exports.findAll = async (req, res) => {
 };
 
 /**
- * Retrieves a specified user
+ * Retrieves a user by their ID.
  * 
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
@@ -175,5 +175,47 @@ exports.findOne = async (req, res) => {
         
     };
 };
+
+
+/**
+Deletes a user by their ID.
+@param {Object} req - The request object.
+@param {Object} res - The response object.
+*/
+exports.delete = async (req, res) => {
+    try {
+        // Attempt to delete the user with the specified ID
+        let result = await User.destroy({ 
+            where: { user_id: req.params.user_id}
+        });
+
+
+        // Check if the user was successfully deleted
+        if (result == 1) {
+            // Return a success message if the user was found and deleted
+            return res.status(200).json({
+                success: true, 
+                msg: `User with id ${req.params.user_id} was successfully deleted!`
+            });
+        }
+
+         // If the user was not found, return a 404 response
+        return res.status(404).json({
+            success: false, 
+            msg: `User with ID ${req.params.user_id} not found.`
+        });
+    }
+    catch (err) {
+         // If an error occurs, return a 500 response with an error message
+        res.status(500).json({
+            success: false, 
+            msg: `Error deleting user with ID ${req.params.user_id}.`
+        });
+    };
+};
+
+
+
+
   
   
