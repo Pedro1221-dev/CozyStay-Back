@@ -9,7 +9,7 @@ router.route('/')
     //.post(  usersController.bodyValidator, usersController.create) 
 
 router.route('/:user_id')
-    //.get( usersController.findOne ) 
+    .get( userController.findOne ) 
     // .delete ( usersController.xxx)
 
 router.route('/:user_id/properties')

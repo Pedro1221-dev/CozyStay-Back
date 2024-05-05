@@ -128,8 +128,52 @@ exports.findAll = async (req, res) => {
         
     } catch (error) {
         // If an error occurs, respond with an error status code and message
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            msg: "Some error occurred while retrieving the users."
+        });
     }
+};
+
+/**
+ * Retrieves a specified user
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.findOne = async (req, res) => {
+    try {
+        // Find the user by their ID
+        let user = await User.findByPk(req.params.user_id);
+
+        // If the user is not found, return a 404 response
+        if (!user) {
+            return res.status(404).json({
+                success: false, 
+                msg: `User with ID ${req.params.user_id} not found.`
+            });
+        }
+
+        // If user is found, return it along with links for actions (HATEOAS)
+        res.status(200).json({ 
+            success: true, 
+            data: user,
+            links:[
+                { "rel": "self", "href": `/users/${user.user_id}`, "method": "GET" },
+                { "rel": "delete", "href": `/users/${user.user_id}`, "method": "DELETE" },
+                { "rel": "modify", "href": `/users/${user.user_id}`, "method": "PUT" },
+            ]
+        });
+
+    }
+    catch (err) {
+        // If an error occurs, return a 500 response with an error message
+        return res.status(500).json({ 
+            success: false, 
+            msg: `Error retrieving user with ID ${req.params.user_id}.`
+        });
+        
+    };
 };
   
   
