@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 
 // import user controller middleware
-const usersController = require("../controllers/users.controller");
+const userController = require("../controllers/user.controller");
 
 router.route('/')
-    //.get( usersController.findAll )
+    .get( userController.findAll )
     //.post(  usersController.bodyValidator, usersController.create) 
 
 router.route('/:user_id')
