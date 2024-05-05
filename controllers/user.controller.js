@@ -178,9 +178,10 @@ exports.findOne = async (req, res) => {
 
 
 /**
-Deletes a user by their ID.
-@param {Object} req - The request object.
-@param {Object} res - The response object.
+ * Deletes a user by their ID.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
 */
 exports.delete = async (req, res) => {
     try {
@@ -215,16 +216,25 @@ exports.delete = async (req, res) => {
 };
 
 
-// Update a tutorial
+/**
+ * Update a user by their ID.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
 exports.update = async (req, res) => {
     try {
+        // Find the user by their ID
         let user = await User.findByPk(req.params.user_id);
+
+        // If the user is not found, return a 404 response
         if (!user) {
             return res.status(404).json({
                 success: false, msg: `User with ID ${req.params.user_id} not found.`
             });
         }
 
+        // Attempt to update the user with the provided data
         let affectedRows = await User.update(
             req.body, { 
                 where: { 
@@ -232,6 +242,7 @@ exports.update = async (req, res) => {
                 } 
             });
 
+        // If no rows were affected, return a success message indicating no updates were made
         if(affectedRows[0] === 0){
             return res.status(404).json({
                 success: true, 
@@ -239,18 +250,21 @@ exports.update = async (req, res) => {
             });
         }
 
+        // Return a success message indicating the user was updated successfully
         return res.json({
             success: true,
             msg: `User with ID ${req.params.user_id} was updated successfully.`
         });
     }
     catch (err) {
+        // If a validation error occurs, return a 400 response with error messages
         if (err instanceof ValidationError)
             return res.status(400).json({ 
                 success: false, 
                 msg: err.errors.map(e => e.message) 
             });
 
+        // If an error occurs, return a 500 response with an error message
         res.status(500).json({
             success: false, 
             msg: `Error retrieving user with ID ${req.params.user_id}.`
