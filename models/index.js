@@ -27,6 +27,8 @@ const db = {};
 db.sequelize = sequelize;
 //export User model
 db.user = require("./user.model.js")(sequelize, DataTypes);
+//export Property model
+db.property = require("./property.model.js")(sequelize, DataTypes);
 
 // // optionally: SYNC
 // (async () => {

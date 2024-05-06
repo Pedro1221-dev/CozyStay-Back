@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 
-// import properties controller middleware
-const propertiesController = require("../controllers/properties.controller");
+// import property controller middleware
+const propertyController = require("../controllers/property.controller");
 
 router.route('/')
-    //.get( propertiesController.findAll )
+    .get( propertyController.findAll )
     //.post ( propertiesController.xxx )
 
 router.route('/:property_id')
