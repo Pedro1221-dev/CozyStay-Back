@@ -4,7 +4,7 @@ const db = require("../models/index.js");
 const User = db.user;
 
 //"Op" necessary for LIKE operator
-const { Op, ValidationError } = require('sequelize');
+const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
 
 /**
  * Retrieves a list of users with optional pagination and filtering.
@@ -270,6 +270,73 @@ exports.update = async (req, res) => {
             success: false, 
             msg: `Error retrieving user with ID ${req.params.user_id}.`
         });
+    };
+};
+
+
+/**
+ * Creates a new user.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.create = async (req, res) => {
+    try {
+        // Extracts the password property from the request body
+        const { password } = req.body;
+
+        // Validate the password
+        // Create a temporary instance of the User model with only the password set
+        const userInstance = User.build({ password });
+
+        // Validate only the password field
+        try {
+            await userInstance.validate({ fields: ['password'] });
+        } catch (error) {
+            // If there are validation errors in the password, return them
+            return res.status(400).json({ 
+                success: false, 
+                msg: error.errors.map(e => e.message)
+            });
+        }
+
+        // Hash the password before saving it to the database
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Add the hashed password to the request body
+        req.body.password = hashedPassword;
+        
+        // Save the user in the database
+        let newUser = await User.create(req.body);
+
+        // Return a sucess message,along with links for actions (HATEOAS)
+        res.status(201).json({
+            success: true,
+            msg: "User successfully created.",
+            links: [
+                { "rel": "self", "href": `/user/${newUser.user_id}`, "method": "GET" },
+                { "rel": "delete", "href": `/user/${newUser.user_id}`, "method": "DELETE" },
+                { "rel": "modify", "href": `/user/${newUser.user_id}`, "method": "PUT" },
+            ]
+        });
+    }
+    catch (err) {
+        // If a validation error occurs, return a 400 response with error messages
+        if (err instanceof ValidationError)
+            res.status(400).json({ 
+                success: false, 
+                msg: err.errors.map(e => e.message) });
+        // If a unique index error occurs, return a 400 response with error messages
+        else if (err instanceof UniqueConstraintError)
+            res.status(400).json({ 
+                success: false, 
+                msg: err.errors.map(e => e.message) }); 
+        // If an error occurs, return a 500 response with an error message
+        else
+            res.status(500).json({
+                success: false, 
+                msg: err.message || "Some error occurred while creating the user."
+            });
     };
 };
 

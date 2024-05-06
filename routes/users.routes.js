@@ -6,7 +6,7 @@ const userController = require("../controllers/user.controller");
 
 router.route('/')
     .get( userController.findAll )
-    //.post(  usersController.bodyValidator, usersController.create) 
+    .post(userController.create) 
 
 router.route('/:user_id')
     .get( userController.findOne ) 
