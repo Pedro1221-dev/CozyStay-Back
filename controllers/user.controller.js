@@ -77,14 +77,14 @@ exports.findAll = async (req, res) => {
         // Otherwise, set nextPage to null
         const nextPage = currentPage < totalPages ? currentPage + 1 : (currentPage === 1 ? 2 : null);
 
-        // Handle out-of-range page number
-        if (currentPage > totalPages) {
-            return res.status(404).json({ message: "No more results available" });
-        }
-
         // Handle no results found
         if (users.length === 0) {
             return res.status(400).json({ message: "No results found" });
+        }
+
+        // Handle out-of-range page number
+        if (currentPage > totalPages) {
+            return res.status(404).json({ message: "No more results available" });
         }
   
         // Create a new array of users with added links
