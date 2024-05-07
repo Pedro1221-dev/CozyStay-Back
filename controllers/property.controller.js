@@ -5,6 +5,12 @@ const Property = db.property;
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
 
+/**
+ * Retrieves a list of proprieties with optional pagination, filtering and sorting.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
 exports.findAll = async (req, res) => {
     try {
         // Initialize search options object
@@ -216,4 +222,46 @@ exports.findAll = async (req, res) => {
             msg: "Some error occurred while retrieving the properties."
         });
     }
+};
+
+
+/**
+ * Retrieves a propriety by their ID.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.findOne = async (req, res) => {
+    try {
+        // Find the property by their ID
+        let property = await Property.findByPk(req.params.property_id);
+
+        // If the property is not found, return a 404 response
+        if (!property) {
+            return res.status(404).json({
+                success: false, 
+                msg: `Property with ID ${req.params.property_id} not found.`
+            });
+        }
+
+        // If property is found, return it along with links for actions (HATEOAS)
+        res.status(200).json({ 
+            success: true, 
+            data: property,
+            links:[
+                { "rel": "self", "href": `/properties/${property.property_id}`, "method": "GET" },
+                { "rel": "delete", "href": `/properties/${property.property_id}`, "method": "DELETE" },
+                { "rel": "modify", "href": `/properties/${property.property_id}`, "method": "PUT" },
+            ]
+        });
+
+    }
+    catch (err) {
+        // If an error occurs, return a 500 response with an error message
+        return res.status(500).json({ 
+            success: false, 
+            msg: `Error retrieving property with ID ${req.params.property_id}.`
+        });
+        
+    };
 };
