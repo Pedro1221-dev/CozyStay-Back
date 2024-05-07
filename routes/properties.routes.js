@@ -11,7 +11,7 @@ router.route('/')
 router.route('/:property_id')
     .get( propertyController.findOne ) 
     //.patch( propertiesController.xxx )
-    //.delete( propertiesControler.xxx)
+    .delete( propertyController.delete)
 
 router.route('/:property_id/confirm')
     //.patch( propertiesController.xxx )
