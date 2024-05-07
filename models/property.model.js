@@ -128,6 +128,25 @@ module.exports = (sequelize, DataTypes) => {
                 }
             }
         },
+        number_guests_allowed: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            validate: {
+                notEmpty: {
+                    msg: "Number of guests allowed cannot be empty"
+                },
+                notNull: {
+                    msg: "Number of guests allowed cannot be null"
+                },
+                isInt: {
+                    msg: "Number of guests allowed must be an integer"
+                },
+                min: {
+                    args: [0],
+                    msg: "Number of guests allowed must be a non-negative integer"
+                }
+            }
+        },
         description: {
             type: DataTypes.TEXT, 
             allowNull: false,
@@ -182,6 +201,7 @@ module.exports = (sequelize, DataTypes) => {
                 }
             }
         },
+        
     }, {
         tableName: 'property', // Specify the table name explicitly
         timestamps: false // Disable automatic creation of `createdAt` and `updatedAt` columns
