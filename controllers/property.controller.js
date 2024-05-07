@@ -3,8 +3,7 @@ const db = require("../models/index.js");
 const Property = db.property;
 
 //"Op" necessary for LIKE operator
-//const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
-
+const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
 
 exports.findAll = async (req, res) => {
     try {
@@ -12,7 +11,19 @@ exports.findAll = async (req, res) => {
         const searchOptions = {};
  
         // Destructure query parameters
-        const { limit: queryLimit, page: queryPage, destination} = req.query;
+        const { 
+            limit: queryLimit, 
+            page: queryPage, 
+            destination, 
+            number_guests_allowed, 
+            price, 
+            number_bedrooms, 
+            number_beds, 
+            number_bathrooms,
+            typology,
+            sort,
+            direction,
+        } = req.query;
 
         // Pagination information
         // Set the limit per page, defaulting to 10 if not specified in the query parameters
@@ -39,7 +50,76 @@ exports.findAll = async (req, res) => {
                 searchOptions.where = { country: country };
             }
         }
+        
+        // Initializing variables to store minimum price and maximum price
+        let minPrice, maxPrice;
+        if (price) {
+            // Split the price parameter into minPrice and maxPrice based on a delimiter ('-')
+            const priceRange = price.split('-').map(val => parseInt(val.trim()));
+            // If both minPrice and maxPrice are provided
+            if (priceRange.length === 2) {
+                minPrice = priceRange[0];
+                maxPrice = priceRange[1];
+            } else if (priceRange.length === 1) {
+                // If only one value is provided, consider it as maxPrice and set minPrice as undefined
+                minPrice = undefined;
+                maxPrice = priceRange[1];
+            }
+        }
 
+        // Use minPrice and maxPrice to construct the price range condition and then merging it with the existing 'where' conditions
+        if (minPrice || maxPrice) {
+            let priceCondition = {};
+
+            if (minPrice) {
+                priceCondition[Op.gte] = minPrice; // Greater than or equal to minPrice
+            }
+
+            if (maxPrice) {
+                priceCondition[Op.lte] = maxPrice; // Less than or equal to maxPrice
+            }
+
+            // Merge the existing 'where' conditions with the new 'price' range condition
+            searchOptions.where = { 
+                ...searchOptions.where,
+                price: priceCondition
+            };
+        }
+
+        // Function to add search conditions based on parameters
+        const addSearchCondition = (param, field) => {
+            if (param) {
+                // If parameter exists, add it to the search options
+                searchOptions.where = {
+                    ...searchOptions.where,
+                    [field]: { [Op.gte]: parseInt(param) } // Using Op.gte to find properties with the specified field greater than or equal to the provided value
+                };
+            }
+        };
+
+        // Add search conditions for number_guests_allowed, number_bedrooms, number_beds, and number_bathrooms
+        addSearchCondition(number_guests_allowed, 'number_guests_allowed');
+        addSearchCondition(number_bedrooms, 'number_bedrooms');
+        addSearchCondition(number_beds, 'number_beds');
+        addSearchCondition(number_bathrooms, 'number_bathrooms');
+
+        // Add 'typology' query parameter to search options if provided
+        if (typology) {
+            const selectedTypologies = typology.split(',').map(t => t.trim());
+            searchOptions.where = { 
+                ...searchOptions.where, 
+                typology: selectedTypologies 
+            };
+        }
+
+        // Add 'sort' query parameter to search options if provided
+        if (sort) {
+            // Verifies if direction was specified, if it wasn't, use default one 'ASC'
+            const selectedDirection = direction ? direction.toUpperCase() : 'ASC';
+
+            searchOptions.order = [['property_id', selectedDirection]];
+        }
+        
         // Validate query parameters
         if (isNaN(limit) || limit <= 5) {
             return res.status(400).json({ message: "Limit must be a positive integer, greater than 5" });
@@ -71,14 +151,14 @@ exports.findAll = async (req, res) => {
         // Otherwise, set nextPage to null
         const nextPage = currentPage < totalPages ? currentPage + 1 : (currentPage === 1 ? 2 : null);
 
-        // Handle out-of-range page number
-        if (currentPage > totalPages) {
-            return res.status(404).json({ message: "No more results available" });
-        }
-
         // Handle no results found
         if (properties.length === 0) {
             return res.status(400).json({ message: "No results found" });
+        }
+
+        // Handle out-of-range page number
+        if (currentPage > totalPages) {
+            return res.status(404).json({ message: "No more results available" });
         }
 
         // Create a new array of properties with added links
