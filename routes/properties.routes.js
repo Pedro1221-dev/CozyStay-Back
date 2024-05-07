@@ -9,7 +9,7 @@ router.route('/')
     //.post ( propertiesController.xxx )
 
 router.route('/:property_id')
-    //.get( propertiesController.xxx ) 
+    .get( propertyController.findOne ) 
     //.patch( propertiesController.xxx )
     //.delete( propertiesControler.xxx)
 
