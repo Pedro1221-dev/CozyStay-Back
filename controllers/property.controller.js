@@ -265,3 +265,41 @@ exports.findOne = async (req, res) => {
         
     };
 };
+
+/**
+ * Deletes a property by their ID.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+*/
+exports.delete = async (req, res) => {
+    try {
+        // Attempt to delete the property with the specified ID
+        let result = await Property.destroy({ 
+            where: { property_id: req.params.property_id}
+        });
+
+
+        // Check if the property was successfully deleted
+        if (result == 1) {
+            // Return a success message if the property was found and deleted
+            return res.status(200).json({
+                success: true, 
+                msg: `Property with id ${req.params.property_id} was successfully deleted!`
+            });
+        }
+
+         // If the property was not found, return a 404 response
+        return res.status(404).json({
+            success: false, 
+            msg: `Property with ID ${req.params.property_id} not found.`
+        });
+    }
+    catch (err) {
+         // If an error occurs, return a 500 response with an error message
+        res.status(500).json({
+            success: false, 
+            msg: `Error deleting property with ID ${req.params.property_id}.`
+        });
+    };
+};
