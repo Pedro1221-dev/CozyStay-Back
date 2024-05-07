@@ -303,3 +303,60 @@ exports.delete = async (req, res) => {
         });
     };
 };
+
+/**
+ * Update a property by their ID.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.update = async (req, res) => {
+    try {
+        // Find the property by their ID
+        let property = await Property.findByPk(req.params.property_id);
+
+        // If the property is not found, return a 404 response
+        if (!property) {
+            return res.status(404).json({
+                success: false, msg: `Property with ID ${req.params.property_id} not found.`
+            });
+        }
+
+        // Attempt to update the property with the provided data
+        let affectedRows = await Property.update(
+            req.body, { 
+                where: { 
+                    property_id: req.params.property_id
+                } 
+            });
+
+        // If no rows were affected, return a success message indicating no updates were made
+        if(affectedRows[0] === 0){
+            return res.status(404).json({
+                success: true, 
+                msg: `No updates were made to property with ID ${req.params.property_id}.`
+            });
+        }
+
+        // Return a success message indicating the property was updated successfully
+        return res.json({
+            success: true,
+            msg: `Property with ID ${req.params.property_id} was updated successfully.`
+        });
+    }
+    catch (err) {
+        // If a validation error occurs, return a 400 response with error messages
+        if (err instanceof ValidationError)
+            return res.status(400).json({ 
+                success: false, 
+                msg: err.errors.map(e => e.message) 
+            });
+
+        // If an error occurs, return a 500 response with an error message
+        res.status(500).json({
+            success: false, 
+            msg: `Error retrieving property with ID ${req.params.property_id}.`
+        });
+    };
+};
+
