@@ -3,6 +3,8 @@ const db = require("../models/index.js");
 const Property = db.property;
 // Define a variable PaymentMethod to represent the User model in the database
 const PaymentMethod = db.paymentMethod;
+// Define a variable Facility to represent the User model in the database
+const Facility = db.facility;
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
@@ -148,6 +150,11 @@ exports.findAll = async (req, res) => {
                     attributes: ["description"],
                     through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
                 }, 
+                {
+                    model: db.facility,
+                    attributes: ["name"],
+                    through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
+                }, 
             ]
         });
 
@@ -249,6 +256,11 @@ exports.findOne = async (req, res) => {
                     model: db.paymentMethod,
                     attributes: ["description"],
                     through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
+                }, 
+                {
+                    model: db.facility,
+                    attributes: ["name"],
+                    through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
                 }, 
             ]
         });
