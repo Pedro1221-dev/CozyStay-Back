@@ -41,6 +41,8 @@ db.rating = require("./rating.model.js")(sequelize, DataTypes);
 db.paymentMethod = require("./paymentMethod.model.js")(sequelize, DataTypes);
 //export Photo model
 db.photo = require("./photo.model.js")(sequelize, DataTypes);
+//export seasonPrice model
+db.seasonPrice = require("./seasonPrice.model.js")(sequelize, DataTypes);
 
 // // optionally: SYNC
 // (async () => {
