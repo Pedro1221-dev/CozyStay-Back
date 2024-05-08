@@ -179,7 +179,7 @@ module.exports = (sequelize, DataTypes) => {
             }
         },
         typology: {
-            type: DataTypes.STRING(50), // varchar(50)
+            type: DataTypes.ENUM('house', 'guest_house', 'apartment', 'hotel'), 
             allowNull: false,
             validate: {
                 notEmpty: {
@@ -187,6 +187,10 @@ module.exports = (sequelize, DataTypes) => {
                 },
                 notNull: {
                     msg: "Typology cannot be null"
+                },
+                isIn: {
+                    args: [['house', 'guest_house', 'apartment', 'hotel']], 
+                    msg: "Invalid typology value"
                 }
             }
         },
