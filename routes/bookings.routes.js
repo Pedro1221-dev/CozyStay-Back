@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // import bookings controller middleware
-const bookingsController = require("../controllers/bookings.controller");
+const bookingController = require("../controllers/booking.controller");
 
 router.route('/')
     //.post( bookingsController.xxx )
@@ -11,7 +11,7 @@ router.route('/:booking_id/rates')
     //.post( bookingsController.xxx )
 
 router.route('/:booking_id')
-    //.get( bookingsController.xxx ) 
+    .get( bookingController.findOne ) 
     //.delete( bookingsControler.xxx)
     
 router.route('/upcoming')
