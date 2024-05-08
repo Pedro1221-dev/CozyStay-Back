@@ -47,6 +47,16 @@ db.seasonPrice = require("./seasonPrice.model.js")(sequelize, DataTypes);
 db.facility = require("./facility.model.js")(sequelize, DataTypes);
 
 
+// Define the relationships
+
+// 1:N - 1 property, N photo
+// if property is deleted, delete all the photo associated with it
+db.property.hasMany(db.photo, {
+    foreignKey: 'property_id',
+    onDelete: "CASCADE"
+});
+db.photo.belongsTo(db.property);
+
 // N:N (USER - LANGUAGE)
 db.user.belongsToMany(db.language, {
     through: 'user_language', 
