@@ -103,6 +103,22 @@ db.facility.belongsToMany(db.property, {
     otherKey: 'property_id' // Foreign key in the property_facility table that references the property table
 });
 
+// N:N (USER - PROPERTY) (FAVORITE PROPERTIES)
+db.user.belongsToMany(db.property, {
+    through: 'favorite', 
+    as: 'FavoriteProperties',
+    timestamps: false,
+    foreignKey: 'user_id', // Foreign key in the favorite table that references the user table
+    otherKey: 'property_id' // Foreign key in the favorite table that references the property table
+});
+db.property.belongsToMany(db.user, {
+    through: 'favorite', 
+    as: 'FavoriteProperties',
+    timestamps: false,
+    foreignKey: 'property_id', // Foreign key in the favorite table that references the property table
+    otherKey: 'user_id' // Foreign key in the favorite table that references the user table
+});
+
 
 // // optionally: SYNC
 // (async () => {
