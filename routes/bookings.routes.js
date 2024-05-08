@@ -12,7 +12,7 @@ router.route('/:booking_id/rates')
 
 router.route('/:booking_id')
     .get( bookingController.findOne ) 
-    //.delete( bookingsControler.xxx)
+    .delete( bookingController.delete)
     
 router.route('/upcoming')
     //.get( bookingsController.xxx ) 
