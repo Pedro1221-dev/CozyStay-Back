@@ -57,6 +57,14 @@ db.property.hasMany(db.photo, {
 });
 db.photo.belongsTo(db.property);
 
+// 1:N - 1 property, N ratings
+// if property is deleted, delete all the ratings associated with it
+db.property.hasMany(db.rating, {
+    foreignKey: 'property_id',
+    onDelete: "CASCADE"
+});
+db.rating.belongsTo(db.property);
+
 // N:N (USER - LANGUAGE)
 db.user.belongsToMany(db.language, {
     through: 'user_language', 
