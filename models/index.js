@@ -75,6 +75,20 @@ db.badge.belongsToMany(db.user, {
     otherKey: 'user_id' // Foreign key in the user_badge table that references the user table
 });
 
+// N:N (PROPERTY - PAYMENT METHOD)
+db.property.belongsToMany(db.paymentMethod, {
+    through: 'payment_method_property', 
+    timestamps: false,
+    foreignKey: 'property_id', // Foreign key in the payment_method_property table that references the property table
+    otherKey: 'payment_method_id' // Foreign key in the payment_method_property table that references the payment method table
+});
+db.paymentMethod.belongsToMany(db.property, {
+    through: 'payment_method_property', 
+    timestamps: false,
+    foreignKey: 'payment_method_id', // Foreign key in the payment_method_property table that references the payment method table
+    otherKey: 'property_id' // Foreign key in the payment_method_property table that references the property table
+});
+
 
 // // optionally: SYNC
 // (async () => {
