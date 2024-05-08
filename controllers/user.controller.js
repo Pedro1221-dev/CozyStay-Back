@@ -69,18 +69,20 @@ exports.findAll = async (req, res) => {
             include: [
                 {
                     model: db.language,
+                    as: 'language',
                     attributes: ["language"],
                     through: { attributes: ["language_id"] } // Specifing atributes from the user_language table
                 }, 
                 {
                     model: db.badge,
+                    as: 'badge',
                     attributes: ["title", "description"],
                     through: { attributes: ["badge_id"] } // Specifing atributes from the user_badge table
                 }, 
                 {
                     model: db.property,
                     attributes: ["property_id"],
-                    as: 'FavoriteProperties',
+                    as: 'favorite-properties',
                     through: { attributes: [] } // Specifing atributes from the user_badge table
                 }, 
             ]
@@ -184,17 +186,19 @@ exports.findOne = async (req, res) => {
                 {
                     model: db.language,
                     attributes: ["language"],
+                    as: 'language',
                     through: { attributes: ["language_id"] } // Specifing atributes from the user_language table
                 }, 
                 {
                     model: db.badge,
+                    as: 'badge',
                     attributes: ["title", "description"],
                     through: { attributes: ["badge_id"] } // Specifing atributes from the user_badge table
                 }, 
                 {
                     model: db.property,
                     attributes: ["property_id"],
-                    as: 'FavoriteProperties',
+                    as: 'favorite-properties',
                     through: { attributes: [] } // Specifing atributes from the user_badge table
                 }, 
             ]

@@ -68,6 +68,7 @@ db.rating.belongsTo(db.property);
 // N:N (USER - LANGUAGE)
 db.user.belongsToMany(db.language, {
     through: 'user_language', 
+    as: 'language',
     timestamps: false,
     foreignKey: 'user_id', // Foreign key in the user_language table that references the user table
     otherKey: 'language_id' // Foreign key in the user_language table that references the language table
@@ -82,6 +83,7 @@ db.language.belongsToMany(db.user, {
 // N:N (USER - BADGE)
 db.user.belongsToMany(db.badge, {
     through: 'user_badge', 
+    as: 'badge',
     timestamps: false,
     foreignKey: 'user_id', // Foreign key in the user_badge table that references the user table
     otherKey: 'badge_id' // Foreign key in the user_badge table that references the badge table
@@ -96,6 +98,7 @@ db.badge.belongsToMany(db.user, {
 // N:N (PROPERTY - PAYMENT METHOD)
 db.property.belongsToMany(db.paymentMethod, {
     through: 'payment_method_property', 
+    as: 'payment-method',
     timestamps: false,
     foreignKey: 'property_id', // Foreign key in the payment_method_property table that references the property table
     otherKey: 'payment_method_id' // Foreign key in the payment_method_property table that references the payment method table
@@ -110,6 +113,7 @@ db.paymentMethod.belongsToMany(db.property, {
 // N:N (PROPERTY - FACILITY)
 db.property.belongsToMany(db.facility, {
     through: 'property_facility', 
+    as: 'facilities',
     timestamps: false,
     foreignKey: 'property_id', // Foreign key in the property_facility table that references the property table
     otherKey: 'facility_id' // Foreign key in the property_facility table that references the facility table
@@ -124,14 +128,14 @@ db.facility.belongsToMany(db.property, {
 // N:N (USER - PROPERTY) (FAVORITE PROPERTIES)
 db.user.belongsToMany(db.property, {
     through: 'favorite', 
-    as: 'FavoriteProperties',
+    as: 'favorite-properties',
     timestamps: false,
     foreignKey: 'user_id', // Foreign key in the favorite table that references the user table
     otherKey: 'property_id' // Foreign key in the favorite table that references the property table
 });
 db.property.belongsToMany(db.user, {
     through: 'favorite', 
-    as: 'FavoriteProperties',
+    as: 'favorite-properties',
     timestamps: false,
     foreignKey: 'property_id', // Foreign key in the favorite table that references the property table
     otherKey: 'user_id' // Foreign key in the favorite table that references the user table

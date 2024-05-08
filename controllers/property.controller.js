@@ -149,11 +149,13 @@ exports.findAll = async (req, res) => {
             include: [
                 {
                     model: db.paymentMethod,
+                    as: 'payment-method',
                     attributes: ["description"],
                     through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
                 }, 
                 {
                     model: db.facility,
+                    as: 'facilities',
                     attributes: ["name"],
                     through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
                 }, 
@@ -270,11 +272,13 @@ exports.findOne = async (req, res) => {
             include: [
                 {
                     model: db.paymentMethod,
+                    as: 'payment-method',
                     attributes: ["description"],
                     through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
                 }, 
                 {
                     model: db.facility,
+                    as: 'facilities',
                     attributes: ["name"],
                     through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
                 }, 
