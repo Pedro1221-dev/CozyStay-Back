@@ -6,6 +6,8 @@ const User = db.user;
 const Language = db.language;
 // Define a variable Badge to represent the User model in the database
 const Badge = db.badge;
+// Define a variable Property to represent the User model in the database
+const Property = db.property;
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
@@ -74,6 +76,12 @@ exports.findAll = async (req, res) => {
                     model: db.badge,
                     attributes: ["title", "description"],
                     through: { attributes: ["badge_id"] } // Specifing atributes from the user_badge table
+                }, 
+                {
+                    model: db.property,
+                    attributes: ["property_id"],
+                    as: 'FavoriteProperties',
+                    through: { attributes: [] } // Specifing atributes from the user_badge table
                 }, 
             ]
         });
@@ -182,6 +190,12 @@ exports.findOne = async (req, res) => {
                     model: db.badge,
                     attributes: ["title", "description"],
                     through: { attributes: ["badge_id"] } // Specifing atributes from the user_badge table
+                }, 
+                {
+                    model: db.property,
+                    attributes: ["property_id"],
+                    as: 'FavoriteProperties',
+                    through: { attributes: [] } // Specifing atributes from the user_badge table
                 }, 
             ]
         });
