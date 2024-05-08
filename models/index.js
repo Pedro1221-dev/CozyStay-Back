@@ -89,6 +89,20 @@ db.paymentMethod.belongsToMany(db.property, {
     otherKey: 'property_id' // Foreign key in the payment_method_property table that references the property table
 });
 
+// N:N (PROPERTY - FACILITY)
+db.property.belongsToMany(db.facility, {
+    through: 'property_facility', 
+    timestamps: false,
+    foreignKey: 'property_id', // Foreign key in the property_facility table that references the property table
+    otherKey: 'facility_id' // Foreign key in the property_facility table that references the facility table
+});
+db.facility.belongsToMany(db.property, {
+    through: 'property_facility', 
+    timestamps: false,
+    foreignKey: 'facility_id', // Foreign key in the property_facility table that references the facility table
+    otherKey: 'property_id' // Foreign key in the property_facility table that references the property table
+});
+
 
 // // optionally: SYNC
 // (async () => {
