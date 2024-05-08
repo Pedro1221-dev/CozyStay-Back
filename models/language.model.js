@@ -12,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
             unique: true,
             validate: {
                 notEmpty: {
-                    msg: "Languagecannot be empty"
+                    msg: "Language cannot be empty"
                 },
                 notNull: {
                     msg: "Language cannot be null"
