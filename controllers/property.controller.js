@@ -1,6 +1,8 @@
 const db = require("../models/index.js");
 // Define a variable Property to represent the Property model in the database
 const Property = db.property;
+// Define a variable PaymentMethod to represent the User model in the database
+const PaymentMethod = db.paymentMethod;
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
@@ -140,6 +142,13 @@ exports.findAll = async (req, res) => {
             limit: limit,
             offset: offset,
             ...searchOptions,
+            include: [
+                {
+                    model: db.paymentMethod,
+                    attributes: ["description"],
+                    through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
+                }, 
+            ]
         });
 
         // Calculate the total number of properties after applying pagination
@@ -234,7 +243,15 @@ exports.findAll = async (req, res) => {
 exports.findOne = async (req, res) => {
     try {
         // Find the property by their ID
-        let property = await Property.findByPk(req.params.property_id);
+        let property = await Property.findByPk(req.params.property_id, {
+            include: [
+                {
+                    model: db.paymentMethod,
+                    attributes: ["description"],
+                    through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
+                }, 
+            ]
+        });
 
         // If the property is not found, return a 404 response
         if (!property) {
