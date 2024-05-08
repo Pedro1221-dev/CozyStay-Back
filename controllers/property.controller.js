@@ -360,3 +360,44 @@ exports.update = async (req, res) => {
     };
 };
 
+/**
+ * Creates a new property.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.create = async (req, res) => {
+    try {
+        // Extracts the properties from the request body
+        // const { owner_id, title, city, country, address, number_bedrooms, number_beds, number_bathrooms, number_guests_allowed, description, typology, price} = req.body;
+        
+        // Save the property in the database
+        let newProperty = await Property.create(req.body);
+
+        // Return a sucess message,along with links for actions (HATEOAS)
+        res.status(201).json({
+            success: true,
+            msg: "Property sucessfully sent to validation.",
+            /* links: [
+                { "rel": "self", "href": `/user/${newUser.user_id}`, "method": "GET" },
+                { "rel": "delete", "href": `/user/${newUser.user_id}`, "method": "DELETE" },
+                { "rel": "modify", "href": `/user/${newUser.user_id}`, "method": "PUT" },
+            ] */
+        });
+    }
+    catch (err) {
+        // If a validation error occurs, return a 400 response with error messages
+        if (err instanceof ValidationError)
+            res.status(400).json({ 
+                success: false, 
+                msg: err.errors.map(e => e.message) });
+        // If an error occurs, return a 500 response with an error message
+        else
+            res.status(500).json({
+                success: false, 
+                msg: err.message || "Some error occurred while creating the property."
+            });
+    };
+};
+
+
