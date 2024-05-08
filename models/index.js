@@ -46,6 +46,22 @@ db.seasonPrice = require("./seasonPrice.model.js")(sequelize, DataTypes);
 //export facility model
 db.facility = require("./facility.model.js")(sequelize, DataTypes);
 
+
+// N:N (USER - LANGUAGE)
+db.user.belongsToMany(db.language, {
+    through: 'user_language', 
+    timestamps: false,
+    foreignKey: 'user_id', // Foreign key in the user_language table that references the user table
+    otherKey: 'language_id' // Foreign key in the user_language table that references the language table
+});
+db.language.belongsToMany(db.user, {
+    through: 'user_language', 
+    timestamps: false,
+    foreignKey: 'language_id', // Foreign key in the user_language table that references the language table
+    otherKey: 'user_id' // Foreign key in the user_language table that references the user table
+});
+
+
 // // optionally: SYNC
 // (async () => {
 //     try {
