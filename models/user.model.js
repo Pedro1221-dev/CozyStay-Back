@@ -113,7 +113,7 @@ module.exports = (sequelize, DataTypes) => {
             }
         },
         host_since: {
-            type: DataTypes.DATE,
+            type: DataTypes.DATEONLY,
             allowNull: true, 
             defaultValue: null, 
             validate: {

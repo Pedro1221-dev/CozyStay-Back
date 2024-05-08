@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
             }
         },
         booking_date: {
-            type: DataTypes.DATE,
+            type: DataTypes.DATEONLY,
             allowNull: false,
             defaultValue: DataTypes.NOW,
             validate: {
@@ -39,7 +39,7 @@ module.exports = (sequelize, DataTypes) => {
             }
         },
         check_in_date: {
-            type: DataTypes.DATE,
+            type: DataTypes.DATEONLY,
             allowNull: false,
             validate: {
                 notEmpty: {
@@ -58,7 +58,7 @@ module.exports = (sequelize, DataTypes) => {
             }
         },
         check_out_date: {
-            type: DataTypes.DATE,
+            type: DataTypes.DATEONLY,
             allowNull: false,
             validate: {
                 notEmpty: {
