@@ -5,7 +5,7 @@ const router = express.Router();
 const bookingController = require("../controllers/booking.controller");
 
 router.route('/')
-    //.post( bookingsController.xxx )
+    .post( bookingController.create )
 
 router.route('/:booking_id/rates')
     //.post( bookingsController.xxx )
