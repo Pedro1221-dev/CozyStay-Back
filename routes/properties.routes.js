@@ -6,7 +6,7 @@ const propertyController = require("../controllers/property.controller");
 
 router.route('/')
     .get( propertyController.findAll )
-    //.post ( propertiesController.xxx )
+    .post ( propertyController.create )
 
 router.route('/:property_id')
     .get( propertyController.findOne ) 
