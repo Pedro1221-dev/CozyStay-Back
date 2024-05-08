@@ -5,6 +5,8 @@ const Property = db.property;
 const PaymentMethod = db.paymentMethod;
 // Define a variable Facility to represent the User model in the database
 const Facility = db.facility;
+// Define a variable Photo to represent the User model in the database
+const Photo = db.photo;
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
@@ -155,6 +157,11 @@ exports.findAll = async (req, res) => {
                     attributes: ["name"],
                     through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
                 }, 
+                {
+                    model: db.photo,
+                    attributes: ["url_photo"],
+                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
+                }
             ]
         });
 
@@ -262,6 +269,11 @@ exports.findOne = async (req, res) => {
                     attributes: ["name"],
                     through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
                 }, 
+                {
+                    model: db.photo,
+                    attributes: ["url_photo"],
+                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
+                }
             ]
         });
 
