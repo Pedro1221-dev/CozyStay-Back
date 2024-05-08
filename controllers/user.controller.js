@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const db = require("../models/index.js");
 // Define a variable User to represent the User model in the database
 const User = db.user;
+const Language = db.language;
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
@@ -60,6 +61,13 @@ exports.findAll = async (req, res) => {
             limit: limit,
             offset: offset,
             ...searchOptions,
+            include: [
+                {
+                    model: db.language,
+                    attributes: ["language"],
+                    through: { attributes: ["language_id"] } // Specifing atributes from the user_language table
+                }, 
+            ]
         });
 
         // Calculate the total number of users after applying pagination
@@ -153,7 +161,17 @@ exports.findAll = async (req, res) => {
 exports.findOne = async (req, res) => {
     try {
         // Find the user by their ID
-        let user = await User.findByPk(req.params.user_id);
+        //let user = await User.findByPk(req.params.user_id);
+
+        let user = await User.findByPk(req.params.user_id, {
+            include: [
+                {
+                    model: db.language,
+                    attributes: ["language"],
+                    through: { attributes: ["language_id"] } // Specifing atributes from the user_language table
+                }, 
+            ]
+        });
 
         // If the user is not found, return a 404 response
         if (!user) {
