@@ -19,7 +19,7 @@ app.use('/users', require('./routes/users.routes.js'))
 // routing middleware for resource PROPERTIES
 app.use('/properties', require('./routes/properties.routes.js'))
 // routing middleware for resource BOOKINGS
-// app.use('/bookings', require('./routes/bookings.routes.js'))
+app.use('/bookings', require('./routes/bookings.routes.js'))
 
 
 // handle invalid routes
