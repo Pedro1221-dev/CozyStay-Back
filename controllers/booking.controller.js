@@ -87,3 +87,41 @@ exports.create = async (req, res) => {
             });
     };
 };
+
+/**
+ * Deletes a booking by their ID.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+*/
+exports.delete = async (req, res) => {
+    try {
+        // Attempt to delete the booking with the specified ID
+        let result = await Booking.destroy({ 
+            where: { booking_id: req.params.booking_id}
+        });
+
+
+        // Check if the booking was successfully deleted
+        if (result == 1) {
+            // Return a success message if the booking was found and deleted
+            return res.status(200).json({
+                success: true, 
+                msg: `Booking with id ${req.params.booking_id} was successfully deleted!`
+            });
+        }
+
+         // If the booking was not found, return a 404 response
+        return res.status(404).json({
+            success: false, 
+            msg: `Booking with ID ${req.params.booking_id} not found.`
+        });
+    }
+    catch (err) {
+         // If an error occurs, return a 500 response with an error message
+        res.status(500).json({
+            success: false, 
+            msg: `Error deleting booking with ID ${req.params.booking_id}.`
+        });
+    };
+};
