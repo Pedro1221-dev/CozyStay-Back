@@ -45,3 +45,45 @@ exports.findOne = async (req, res) => {
         
     };
 };
+
+/**
+ * Creates a new booking.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.create = async (req, res) => {
+    try {
+        // Extracts the property_id, check_in_date, check_out_date, number_guests, final_price, payment_method_id properties from the request body
+        const { property_id, check_in_date, check_out_date, number_guests, final_price, payment_method_id } = req.body;
+
+        // Need to retrieve the user id (guest_id) who made the reservation from the token
+
+        // Save the booking in the database
+        let newBooking = await Booking.create(req.body);
+
+        // Return a sucess message,along with links for actions (HATEOAS)
+        res.status(201).json({
+            success: true,
+            msg: "Booking successfully created.",
+            /* links: [
+                { "rel": "self", "href": `/user/${newUser.user_id}`, "method": "GET" },
+                { "rel": "delete", "href": `/user/${newUser.user_id}`, "method": "DELETE" },
+                { "rel": "modify", "href": `/user/${newUser.user_id}`, "method": "PUT" },
+            ] */
+        });
+    }
+    catch (err) {
+        // If a validation error occurs, return a 400 response with error messages
+        if (err instanceof ValidationError)
+            res.status(400).json({ 
+                success: false, 
+                msg: err.errors.map(e => e.message) });
+        // If an error occurs, return a 500 response with an error message
+        else
+            res.status(500).json({
+                success: false, 
+                msg: err.message || "Some error occurred while creating the booking."
+            });
+    };
+};
