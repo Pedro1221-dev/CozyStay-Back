@@ -9,7 +9,7 @@ const Facility = db.facility;
 const Photo = db.photo;
 
 //"Op" necessary for LIKE operator
-const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
+const { Op, ValidationError, UniqueConstraintError, Sequelize } = require('sequelize');
 
 /**
  * Retrieves a list of proprieties with optional pagination, filtering and sorting.
@@ -164,9 +164,13 @@ exports.findAll = async (req, res) => {
                 },
                 {
                     model: db.rating,
-                    attributes: ["number_stars", "comment"],
+                    attributes: [
+                        "number_stars", 
+                        "comment", 
+                        //[Sequelize.fn('AVG', Sequelize.col('number_stars')), 'average_rating']
+                    ],
                     //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
-                }
+                },
             ]
         });
 
@@ -281,9 +285,13 @@ exports.findOne = async (req, res) => {
                 },
                 {
                     model: db.rating,
-                    attributes: ["number_stars", "comment"],
+                    attributes: [
+                        "number_stars", 
+                        "comment", 
+                        //[Sequelize.fn('AVG', Sequelize.col('number_stars')), 'average_rating']
+                    ],
                     //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
-                }
+                },
             ]
         });
 
