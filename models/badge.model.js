@@ -35,13 +35,13 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             validate: {
                 notEmpty: {
-                    msg: "Url cannot be empty"
+                    msg: "Url of badge cannot be empty"
                 },
                 notNull: {
-                    msg: "Url cannot be null"
+                    msg: "Url of badge cannot be null"
                 },
                 isUrl: {
-                    msg: "Url must have a url format (https://foo.com)"
+                    msg: "Url of badge must have a url format (https://foo.com)"
                 }
             }
         }
