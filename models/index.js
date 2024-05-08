@@ -33,6 +33,8 @@ db.property = require("./property.model.js")(sequelize, DataTypes);
 db.booking = require("./booking.model.js")(sequelize, DataTypes);
 //export Language model
 db.language = require("./language.model.js")(sequelize, DataTypes);
+//export Badge model
+db.badge = require("./badge.model.js")(sequelize, DataTypes);
 
 // // optionally: SYNC
 // (async () => {
