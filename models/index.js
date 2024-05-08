@@ -37,6 +37,8 @@ db.language = require("./language.model.js")(sequelize, DataTypes);
 db.badge = require("./badge.model.js")(sequelize, DataTypes);
 //export Rating model
 db.rating = require("./rating.model.js")(sequelize, DataTypes);
+//export PaymentMethod model
+db.paymentMethod = require("./paymentMethod.model.js")(sequelize, DataTypes);
 
 // // optionally: SYNC
 // (async () => {
