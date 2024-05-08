@@ -61,6 +61,20 @@ db.language.belongsToMany(db.user, {
     otherKey: 'user_id' // Foreign key in the user_language table that references the user table
 });
 
+// N:N (USER - BADGE)
+db.user.belongsToMany(db.badge, {
+    through: 'user_badge', 
+    timestamps: false,
+    foreignKey: 'user_id', // Foreign key in the user_badge table that references the user table
+    otherKey: 'badge_id' // Foreign key in the user_badge table that references the badge table
+});
+db.badge.belongsToMany(db.user, {
+    through: 'user_badge', 
+    timestamps: false,
+    foreignKey: 'badge_id', // Foreign key in the user_badge table that references the badge table
+    otherKey: 'user_id' // Foreign key in the user_badge table that references the user table
+});
+
 
 // // optionally: SYNC
 // (async () => {
