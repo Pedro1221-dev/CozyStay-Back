@@ -161,6 +161,11 @@ exports.findAll = async (req, res) => {
                     model: db.photo,
                     attributes: ["url_photo"],
                     //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
+                },
+                {
+                    model: db.rating,
+                    attributes: ["number_stars", "comment"],
+                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
                 }
             ]
         });
@@ -272,6 +277,11 @@ exports.findOne = async (req, res) => {
                 {
                     model: db.photo,
                     attributes: ["url_photo"],
+                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
+                },
+                {
+                    model: db.rating,
+                    attributes: ["number_stars", "comment"],
                     //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
                 }
             ]
