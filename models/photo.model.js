@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
             allowNull: false,
             autoIncrement: true
         },
-        property_id: {
+        /* property_id: {
             type: DataTypes.INTEGER,
             allowNull: false,
             // Foreign Key
@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
                 model: 'property', // Table name
                 key: 'property_id' // Table column that is the primary key
             }
-        },
+        }, */
         url_photo: {
             type: DataTypes.STRING(255),
             allowNull: false,
