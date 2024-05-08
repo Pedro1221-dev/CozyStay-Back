@@ -1,13 +1,10 @@
 module.exports = (sequelize, DataTypes) => {
     const Rating = sequelize.define("Rating", {
-        property_id: {
+        rating_id: {
             type: DataTypes.INTEGER,
+            primaryKey: true,
             allowNull: false,
-            // Foreign Key
-            references: {
-                model: 'property', // Table name
-                key: 'property_id' // Table column that is the primary key
-            }
+            autoIncrement: true
         },
         booking_id: {
             type: DataTypes.INTEGER,
