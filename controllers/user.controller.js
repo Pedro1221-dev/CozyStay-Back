@@ -2,7 +2,10 @@ const bcrypt = require('bcrypt');
 const db = require("../models/index.js");
 // Define a variable User to represent the User model in the database
 const User = db.user;
+// Define a variable Language to represent the User model in the database
 const Language = db.language;
+// Define a variable Badge to represent the User model in the database
+const Badge = db.badge;
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
@@ -66,6 +69,11 @@ exports.findAll = async (req, res) => {
                     model: db.language,
                     attributes: ["language"],
                     through: { attributes: ["language_id"] } // Specifing atributes from the user_language table
+                }, 
+                {
+                    model: db.badge,
+                    attributes: ["title", "description"],
+                    through: { attributes: ["badge_id"] } // Specifing atributes from the user_badge table
                 }, 
             ]
         });
@@ -169,6 +177,11 @@ exports.findOne = async (req, res) => {
                     model: db.language,
                     attributes: ["language"],
                     through: { attributes: ["language_id"] } // Specifing atributes from the user_language table
+                }, 
+                {
+                    model: db.badge,
+                    attributes: ["title", "description"],
+                    through: { attributes: ["badge_id"] } // Specifing atributes from the user_badge table
                 }, 
             ]
         });
