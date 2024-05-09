@@ -12,6 +12,7 @@ const User = db.user;
 //const Badge = db.badge;
 // Define a variable Property to represent the User model in the database
 const Property = db.property;
+const Booking = db.booking;
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
@@ -223,7 +224,7 @@ exports.findOne = async (req, res) => {
             links:[
                 { "rel": "self", "href": `/users/${user.user_id}`, "method": "GET" },
                 { "rel": "delete", "href": `/users/${user.user_id}`, "method": "DELETE" },
-                { "rel": "modify", "href": `/users/${user.user_id}`, "method": "PUT" },
+                { "rel": "modify", "href": `/users/${user.user_id}`, "method": "PATCH" },
             ]
         });
 
@@ -377,7 +378,7 @@ exports.create = async (req, res) => {
             links: [
                 { "rel": "self", "href": `/user/${newUser.user_id}`, "method": "GET" },
                 { "rel": "delete", "href": `/user/${newUser.user_id}`, "method": "DELETE" },
-                { "rel": "modify", "href": `/user/${newUser.user_id}`, "method": "PUT" },
+                { "rel": "modify", "href": `/user/${newUser.user_id}`, "method": "PATCH" },
             ]
         });
     }
@@ -508,7 +509,7 @@ exports.findOneCurrent = async (req, res) => {
             links:[
                 { "rel": "self", "href": `/users/${userId}`, "method": "GET" },
                 { "rel": "delete", "href": `/users/${userId}`, "method": "DELETE" },
-                { "rel": "modify", "href": `/users/${userId}`, "method": "PUT" },
+                { "rel": "modify", "href": `/users/${userId}`, "method": "PATCH" },
             ]
         });
 
@@ -581,7 +582,7 @@ exports.findProperties = async (req, res) => {
             plainProperty.links = [
                 { "rel": "self", "href": `/properties/${plainProperty.property_id}`, "method": "GET" },
                 { "rel": "delete", "href": `/properties/${plainProperty.property_id}`, "method": "DELETE" },
-                { "rel": "modify", "href": `/properties/${plainProperty.property_id}`, "method": "PUT" }
+                { "rel": "modify", "href": `/properties/${plainProperty.property_id}`, "method": "PATCH" }
             ];
             return plainProperty;
         });
@@ -664,7 +665,7 @@ exports.findPropertiesCurrent = async (req, res) => {
             plainProperty.links = [
                 { "rel": "self", "href": `/properties/${plainProperty.property_id}`, "method": "GET" },
                 { "rel": "delete", "href": `/properties/${plainProperty.property_id}`, "method": "DELETE" },
-                { "rel": "modify", "href": `/properties/${plainProperty.property_id}`, "method": "PUT" }
+                { "rel": "modify", "href": `/properties/${plainProperty.property_id}`, "method": "PATCH" }
             ];
             return plainProperty;
         });
@@ -683,7 +684,91 @@ exports.findPropertiesCurrent = async (req, res) => {
         // If an error occurs, return a 500 response with an error message
         return res.status(500).json({ 
             success: false, 
-            msg: `Error retrieving properties for owner with ID ${req.params.user_id}.`
+            msg: `Error retrieving properties for owner with ID ${owner_id}.`
+        });
+        
+    };
+};
+
+
+/**
+ * Retrieves properties belonging to a specific owner by their ID.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.findBookingsCurrent = async (req, res) => {
+    try {
+        // Extract owner ID from request parameters
+        const guest_id = req.userData.user_id;
+
+        // Find bookings by owner ID
+        let bookings = await Booking.findAll({ 
+            where: { guest_id: guest_id  },
+           /*  include: [
+                {
+                    model: db.paymentMethod,
+                    as: 'payment-method',
+                    attributes: ["description"],
+                    through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
+                }, 
+                {
+                    model: db.facility,
+                    as: 'facilities',
+                    attributes: ["name"],
+                    through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
+                }, 
+                {
+                    model: db.photo,
+                    attributes: ["url_photo"],
+                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
+                },
+                {
+                    model: db.rating,
+                    attributes: [
+                        "number_stars", 
+                        "comment", 
+                        //[Sequelize.fn('AVG', Sequelize.col('number_stars')), 'average_rating']
+                    ],
+                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
+                },
+            ], */
+        });
+
+        // If no bookings found for the owner, return a 404 response
+        if (bookings.length === 0) {
+            return res.status(404).json({
+                success: false, 
+                msg: `Booking for guest with ID ${guest_id} not found.`
+            });
+        }
+
+        // Add links to each property
+        bookings = bookings.map(booking => {
+            const plainBooking = booking.get({ plain: true }); // Convert to plain JavaScript object
+            plainBooking.links = [
+                { "rel": "self", "href": `/bookings/${plainBooking.booking_id}`, "method": "GET" },
+                { "rel": "delete", "href": `/bookings/${plainBooking.booking_id}`, "method": "DELETE" },
+                { "rel": "modify", "href": `/bookings/${plainBooking.booking_id}`, "method": "PATCH" }
+            ];
+            return plainBooking;
+        });
+
+        // If properties are found, return them along with links for actions (HATEOAS)
+        res.status(200).json({ 
+            success: true, 
+            data: bookings,
+            links: [
+                { "rel": "add-booking", "href": `/bookings`, "method": "POST" }
+            ]
+        });
+
+    }
+    catch (err) {
+        // If an error occurs, return a 500 response with an error message
+        return res.status(500).json({ 
+            success: false, 
+            msg: `Error retrieving bookings for guest with ID ${guest_id}.`
         });
         
     };
