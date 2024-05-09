@@ -19,7 +19,7 @@ router.route('/current')
     //.patch( usersController.xxx )
 
 router.route('/current/properties')
-    .get( checkAuth, userController.findPropertiesCurrent ) // PROTECTED
+    .get( checkAuth, userController.findPropertiesCurrent ) // PROTECTED (user logged in)
 
 router.route('/:user_id')
     .get( userController.findOne )  // PUBLIC
