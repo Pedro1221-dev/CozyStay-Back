@@ -36,16 +36,6 @@ router.route('/:user_id')
 router.route('/:user_id/properties')
     .get( userController.findProperties )  // PUBLIC
 
-router.route('/current')
-    .get( checkAuth, userController.findOneCurrent )  // PROTECTED
-    //.patch( usersController.xxx )
-
-
-
-
-
-
-
 router.route('/current/favorites/:property_id')
     //.delete( usersController.xxx ) // PROTECTED
 
