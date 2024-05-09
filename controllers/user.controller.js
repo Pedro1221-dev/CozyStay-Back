@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const db = require("../models/index.js");
 // Define a variable User to represent the User model in the database
 const User = db.user;
@@ -396,6 +397,55 @@ exports.create = async (req, res) => {
             });
     };
 };
+
+
+/**
+ * Logs in a user.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.login = async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.body.email });
+        
+        if (!user) {
+            return res.status(401).json({
+                message: 'Invalid credentials'
+            });
+        }
+        
+        const match = await bcrypt.compare(req.body.password, user.password);
+        
+        if (match) {
+            const token = jwt.sign(
+                {
+                    email: user.email,
+                    type: user.type,
+                    user_id: user.user_id
+                }, 
+                    process.env.JWT_KEY, 
+                {
+                    expiresIn: '1h'
+                }
+            );
+            return res.status(200).json({
+                message: 'Auth successful',
+                accessToken: token
+            });
+        } else {
+            return res.status(401).json({
+                message: 'Invalid credentials'
+            });
+        }
+    } catch (err) {
+        res.status(500).json({
+            error: err.message || 'Something went wrong. Please try again later'
+        });
+    }
+};
+
+
 
   
   

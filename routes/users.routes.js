@@ -37,7 +37,7 @@ router.route('/verifyEmail')
     //.post( usersController.xxx )
 
 router.route('/login')
-    //.post( usersController.xxx )
+    .post( userController.login )
 
 
 router.all('*', (req, res) => {
