@@ -16,7 +16,7 @@ router.route('/')
 
 router.route('/current')
     .get( checkAuth, userController.findOneCurrent )  // PROTECTED
-    //.patch( usersController.xxx )
+    .patch( checkAuth, userController.updateCurrent ) // PROTECTED (user logged in)
 
 router.route('/current/properties')
     .get( checkAuth, userController.findPropertiesCurrent ) // PROTECTED (user logged in)
@@ -31,7 +31,7 @@ router.route('/current/favorites')
 router.route('/:user_id')
     .get( userController.findOne )  // PUBLIC
     .delete( checkAuth, userController.delete) // PROTECTED
-    .patch( checkAuth, checkCurrent, userController.update) // PROTECTED
+    .patch( checkAuth, checkAdmin, userController.update) // PROTECTED (admin logged in)
 
 router.route('/:user_id/properties')
     .get( userController.findProperties )  // PUBLIC
