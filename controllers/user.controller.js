@@ -13,6 +13,7 @@ const User = db.user;
 // Define a variable Property to represent the User model in the database
 const Property = db.property;
 const Booking = db.booking;
+const Favorite = db.favorite;
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
@@ -692,47 +693,19 @@ exports.findPropertiesCurrent = async (req, res) => {
 
 
 /**
- * Retrieves properties belonging to a specific owner by their ID.
+ * Retrieves bookings belonging to a specific guest by their ID.
  * 
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
  */
 exports.findBookingsCurrent = async (req, res) => {
     try {
-        // Extract owner ID from request parameters
+        // Extract guest ID from request parameters
         const guest_id = req.userData.user_id;
 
         // Find bookings by owner ID
         let bookings = await Booking.findAll({ 
-            where: { guest_id: guest_id  },
-           /*  include: [
-                {
-                    model: db.paymentMethod,
-                    as: 'payment-method',
-                    attributes: ["description"],
-                    through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
-                }, 
-                {
-                    model: db.facility,
-                    as: 'facilities',
-                    attributes: ["name"],
-                    through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
-                }, 
-                {
-                    model: db.photo,
-                    attributes: ["url_photo"],
-                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
-                },
-                {
-                    model: db.rating,
-                    attributes: [
-                        "number_stars", 
-                        "comment", 
-                        //[Sequelize.fn('AVG', Sequelize.col('number_stars')), 'average_rating']
-                    ],
-                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
-                },
-            ], */
+            where: { guest_id: guest_id },
         });
 
         // If no bookings found for the owner, return a 404 response
@@ -743,7 +716,7 @@ exports.findBookingsCurrent = async (req, res) => {
             });
         }
 
-        // Add links to each property
+        // Add links to each booking
         bookings = bookings.map(booking => {
             const plainBooking = booking.get({ plain: true }); // Convert to plain JavaScript object
             plainBooking.links = [
@@ -754,7 +727,7 @@ exports.findBookingsCurrent = async (req, res) => {
             return plainBooking;
         });
 
-        // If properties are found, return them along with links for actions (HATEOAS)
+        // If booking are found, return them along with links for actions (HATEOAS)
         res.status(200).json({ 
             success: true, 
             data: bookings,
@@ -773,6 +746,59 @@ exports.findBookingsCurrent = async (req, res) => {
         
     };
 };
+
+/**
+ * Retrieves favorite properties belonging to the current user.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.findFavoritePropertiesCurrent = async (req, res) => {
+    try {
+        // Extract user ID from request parameters
+        const user_id = req.userData.user_id;
+
+        // Find favorite properties by user ID
+        let favorites = await User.findAll({ 
+            where: { user_id: user_id },
+            include: [
+                {
+                    model: db.property,
+                    as: 'favorite-properties',
+                }
+            ],
+            attributes: [] // Exclude other attributes of the user
+
+        });
+
+        // If no favorite properties found for the user, return a 404 response
+        if (favorites.length === 0) {
+            return res.status(404).json({
+                success: false, 
+                msg: `Favorite properties for user with ID ${user_id} not found.`
+            });
+        }
+
+        // If favorite properties are found, return them along with links for actions (HATEOAS)
+        res.status(200).json({ 
+            success: true, 
+            data: favorites,
+            links: [
+                { "rel": "add-favorite", "href": `/users/current/favorites`, "method": "POST" }
+            ]
+        });
+
+    }
+    catch (err) {
+        // If an error occurs, return a 500 response with an error message
+        return res.status(500).json({ 
+            success: false, 
+            msg: `Error retrieving favorite properties for user with ID ${req.userData.user_id}.`
+        });
+        
+    };
+};
+
 
 
 
