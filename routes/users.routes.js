@@ -24,6 +24,10 @@ router.route('/current/properties')
 router.route('/current/bookings')
     .get( checkAuth, userController.findBookingsCurrent ) // PROTECTED (user logged in)
 
+router.route('/current/favorites')
+    .get( checkAuth, userController.findFavoritePropertiesCurrent ) // PROTECTED (user logged in)
+    //.post( usersController.xxx ) // PROTECTED
+
 router.route('/:user_id')
     .get( userController.findOne )  // PUBLIC
     .delete( checkAuth, userController.delete) // PROTECTED
@@ -40,9 +44,7 @@ router.route('/current')
 
 
 
-router.route('/current/favorites')
-    //.get( usersController.xxx ) // PROTECTED
-    //.post( usersController.xxx ) // PROTECTED
+
 
 router.route('/current/favorites/:property_id')
     //.delete( usersController.xxx ) // PROTECTED
