@@ -14,6 +14,10 @@ router.route('/')
     .get( checkAuth, checkAdmin, userController.findAll ) // PROTECTED (admin logged in)
     .post(userController.create)  // PUBLIC
 
+router.route('/current')
+    .get( checkAuth, userController.findOneCurrent )  // PROTECTED
+    //.patch( usersController.xxx )
+
 router.route('/:user_id')
     .get( userController.findOne )  // PUBLIC
     .delete( checkAuth, userController.delete) // PROTECTED
@@ -23,7 +27,7 @@ router.route('/:user_id/properties')
     //.get( usersController.xxx )  // PUBLIC
 
 router.route('/current')
-    //.get( usersController.xxx )  // PROTECTED
+    .get( checkAuth, userController.findOneCurrent )  // PROTECTED
     //.patch( usersController.xxx )
 
 router.route('/current/properties')
