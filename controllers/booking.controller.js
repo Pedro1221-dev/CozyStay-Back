@@ -56,9 +56,14 @@ exports.findOne = async (req, res) => {
 exports.create = async (req, res) => {
     try {
         // Extracts the property_id, check_in_date, check_out_date, number_guests, final_price, payment_method_id properties from the request body
-        const { property_id, check_in_date, check_out_date, number_guests, final_price, payment_method_id } = req.body;
+        //const { property_id, check_in_date, check_out_date, number_guests, final_price, payment_method_id } = req.body;
 
         // Need to retrieve the user id (guest_id) who made the reservation from the token
+        // Retrieving the user id (guest_id) who made the reservation from the token
+        const guest_id = req.userData.user_id;
+
+        // Set the guest_id in the req.body object
+        req.body.guest_id = guest_id;
 
         // Save the booking in the database
         let newBooking = await Booking.create(req.body);

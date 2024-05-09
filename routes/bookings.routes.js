@@ -2,12 +2,14 @@
 const express = require('express');
 // Creating an instance of the express router
 const router = express.Router();
+// Importing middleware functions
+const checkAuth = require('../middleware/check-auth');
 
 // import bookings controller middleware
 const bookingController = require("../controllers/booking.controller");
 
 router.route('/')
-    .post( bookingController.create ) // PROTECTED
+    .post( checkAuth, bookingController.create ) // PROTECTED (user logged in)
 
 router.route('/:booking_id/rates')
     //.post( bookingsController.xxx ) // PROTECTED
