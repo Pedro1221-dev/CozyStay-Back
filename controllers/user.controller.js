@@ -459,6 +459,70 @@ exports.login = async (req, res) => {
     }
 };
 
+/**
+ * Retrieves a user by their ID.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.findOneCurrent = async (req, res) => {
+    try {
+        // Retrieve the user ID from the token in the header
+        const userId = req.userData.user_id;
+
+        let user = await User.findByPk(userId, {
+            include: [
+                {
+                    model: db.language,
+                    attributes: ["language"],
+                    as: 'language',
+                    through: { attributes: ["language_id"] } // Specifing atributes from the user_language table
+                }, 
+                {
+                    model: db.badge,
+                    as: 'badge',
+                    attributes: ["title", "description"],
+                    through: { attributes: ["badge_id"] } // Specifing atributes from the user_badge table
+                }, 
+                {
+                    model: db.property,
+                    attributes: ["property_id"],
+                    as: 'favorite-properties',
+                    through: { attributes: [] } // Specifing atributes from the user_badge table
+                }, 
+            ]
+        });
+
+        // If the user is not found, return a 404 response
+        if (!user) {
+            return res.status(404).json({
+                success: false, 
+                msg: `User with ID ${userId} not found.`
+            });
+        }
+
+        // If user is found, return it along with links for actions (HATEOAS)
+        res.status(200).json({ 
+            success: true, 
+            data: user,
+            links:[
+                { "rel": "self", "href": `/users/${userId}`, "method": "GET" },
+                { "rel": "delete", "href": `/users/${userId}`, "method": "DELETE" },
+                { "rel": "modify", "href": `/users/${userId}`, "method": "PUT" },
+            ]
+        });
+
+    }
+    catch (err) {
+        // If an error occurs, return a 500 response with an error message
+        return res.status(500).json({ 
+            success: false, 
+            msg: `Error retrieving user with ID ${userId}.`
+        });
+        
+    };
+};
+
 
 
   
