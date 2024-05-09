@@ -11,7 +11,7 @@ const checkAdmin= require('../middleware/check-admin');
 const userController = require("../controllers/user.controller");
 
 router.route('/')
-    .get( userController.findAll ) // PROTECTED
+    .get( checkAuth, checkAdmin, userController.findAll ) // PROTECTED (admin logged in)
     .post(userController.create)  // PUBLIC
 
 router.route('/:user_id')
