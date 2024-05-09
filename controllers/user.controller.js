@@ -11,7 +11,7 @@ const User = db.user;
 // Define a variable Badge to represent the User model in the database
 //const Badge = db.badge;
 // Define a variable Property to represent the User model in the database
-//const Property = db.property;
+const Property = db.property;
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
@@ -522,6 +522,90 @@ exports.findOneCurrent = async (req, res) => {
         
     };
 };
+
+/**
+ * Retrieves properties belonging to a specific owner by their ID.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.findProperties = async (req, res) => {
+    try {
+        // Extract owner ID from request parameters
+        const owner_id = req.params.user_id;
+
+        // Find properties by owner ID
+        let properties = await Property.findAll({ 
+            where: { owner_id: owner_id  },
+            include: [
+                {
+                    model: db.paymentMethod,
+                    as: 'payment-method',
+                    attributes: ["description"],
+                    through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
+                }, 
+                {
+                    model: db.facility,
+                    as: 'facilities',
+                    attributes: ["name"],
+                    through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
+                }, 
+                {
+                    model: db.photo,
+                    attributes: ["url_photo"],
+                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
+                },
+                {
+                    model: db.rating,
+                    attributes: [
+                        "number_stars", 
+                        "comment", 
+                        //[Sequelize.fn('AVG', Sequelize.col('number_stars')), 'average_rating']
+                    ],
+                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
+                },
+            ],
+        });
+
+        // If no properties found for the owner, return a 404 response
+        if (properties.length === 0) {
+            return res.status(404).json({
+                success: false, 
+                msg: `Properties for owner with ID ${owner_id} not found.`
+            });
+        }
+
+        // Add links to each property
+        properties = properties.map(property => {
+            const plainProperty = property.get({ plain: true }); // Convert to plain JavaScript object
+            plainProperty.links = [
+                { "rel": "self", "href": `/properties/${plainProperty.property_id}`, "method": "GET" },
+                { "rel": "delete", "href": `/properties/${plainProperty.property_id}`, "method": "DELETE" },
+                { "rel": "modify", "href": `/properties/${plainProperty.property_id}`, "method": "PUT" }
+            ];
+            return plainProperty;
+        });
+
+        // If properties are found, return them along with links for actions (HATEOAS)
+        res.status(200).json({ 
+            success: true, 
+            data: properties,
+            links: [
+                { "rel": "add-property", "href": `/properties`, "method": "POST" }
+            ]
+        });
+
+    }
+    catch (err) {
+        // If an error occurs, return a 500 response with an error message
+        return res.status(500).json({ 
+            success: false, 
+            msg: `Error retrieving properties for owner with ID ${req.params.user_id}.`
+        });
+        
+    };
+};
+
 
 
 
