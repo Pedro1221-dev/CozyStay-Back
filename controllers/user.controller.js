@@ -336,6 +336,72 @@ exports.update = async (req, res) => {
     };
 };
 
+/**
+ * Update a user by their ID.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.updateCurrent = async (req, res) => {
+    try {
+        // Extract owner ID from request parameters
+        const user_id = req.userData.user_id;
+
+        // Find the user by their ID
+        let user = await User.findByPk(user_id);
+
+        // If the user is not found, return a 404 response
+        if (!user) {
+            return res.status(404).json({
+                success: false, msg: `User with ID ${user_id} not found.`
+            });
+        }
+
+        // Check if the type is being updated
+        if (req.body.type) {
+            return res.status(403).json({
+                success: false, msg: `You are not authorized to change the user type.`
+            });
+        }
+
+        // Attempt to update the user with the provided data
+        let affectedRows = await User.update(
+            req.body, { 
+                where: { 
+                    user_id: user_id
+                } 
+            });
+
+        // If no rows were affected, return a success message indicating no updates were made
+        if(affectedRows[0] === 0){
+            return res.status(404).json({
+                success: true, 
+                msg: `No updates were made to user with ID ${user_id}.`
+            });
+        }
+
+        // Return a success message indicating the user was updated successfully
+        return res.json({
+            success: true,
+            msg: `User with ID ${user_id} was updated successfully.`
+        });
+    }
+    catch (err) {
+        // If a validation error occurs, return a 400 response with error messages
+        if (err instanceof ValidationError)
+            return res.status(400).json({ 
+                success: false, 
+                msg: err.errors.map(e => e.message) 
+            });
+
+        // If an error occurs, return a 500 response with an error message
+        res.status(500).json({
+            success: false, 
+            msg: `Error retrieving user with ID ${user_id}.`
+        });
+    };
+};
+
 
 /**
  * Creates a new user.
