@@ -18,6 +18,9 @@ router.route('/current')
     .get( checkAuth, userController.findOneCurrent )  // PROTECTED
     //.patch( usersController.xxx )
 
+router.route('/current/properties')
+    .get( checkAuth, userController.findPropertiesCurrent ) // PROTECTED
+
 router.route('/:user_id')
     .get( userController.findOne )  // PUBLIC
     .delete( checkAuth, userController.delete) // PROTECTED
@@ -30,8 +33,7 @@ router.route('/current')
     .get( checkAuth, userController.findOneCurrent )  // PROTECTED
     //.patch( usersController.xxx )
 
-router.route('/current/properties')
-    //.get( usersController.xxx ) // PROTECTED
+
 
 router.route('/current/bookings')
     //.get( usersController.xxx ) // PROTECTED
