@@ -1,12 +1,13 @@
+// Importing all the models
 const db = require("../models/index.js");
 // Define a variable Property to represent the Property model in the database
 const Property = db.property;
 // Define a variable PaymentMethod to represent the User model in the database
-const PaymentMethod = db.paymentMethod;
+//const PaymentMethod = db.paymentMethod;
 // Define a variable Facility to represent the User model in the database
-const Facility = db.facility;
+//const Facility = db.facility;
 // Define a variable Photo to represent the User model in the database
-const Photo = db.photo;
+//const Photo = db.photo;
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError, Sequelize } = require('sequelize');

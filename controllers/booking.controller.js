@@ -1,3 +1,4 @@
+// Importing all the models
 const db = require("../models/index.js");
 // Define a variable Booking to represent the Booking model in the database
 const Booking = db.booking;
