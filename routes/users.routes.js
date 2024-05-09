@@ -24,7 +24,7 @@ router.route('/:user_id')
     .patch( checkAuth, checkCurrent, userController.update) // PROTECTED
 
 router.route('/:user_id/properties')
-    //.get( usersController.xxx )  // PUBLIC
+    .get( userController.findProperties )  // PUBLIC
 
 router.route('/current')
     .get( checkAuth, userController.findOneCurrent )  // PROTECTED
