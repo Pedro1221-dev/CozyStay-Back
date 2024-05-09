@@ -1,14 +1,17 @@
+// Importing the bcrypt library
 const bcrypt = require('bcrypt');
+// Importing the jsonwebtoken library
 const jwt = require('jsonwebtoken');
+// Importing all the models
 const db = require("../models/index.js");
 // Define a variable User to represent the User model in the database
 const User = db.user;
 // Define a variable Language to represent the User model in the database
-const Language = db.language;
+//const Language = db.language;
 // Define a variable Badge to represent the User model in the database
-const Badge = db.badge;
+//const Badge = db.badge;
 // Define a variable Property to represent the User model in the database
-const Property = db.property;
+//const Property = db.property;
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
@@ -407,16 +410,25 @@ exports.create = async (req, res) => {
  */
 exports.login = async (req, res) => {
     try {
-        const user = await User.findOne({ email: req.body.email });
+        // Finding the user with the provided email
+        const user = await User.findOne(
+            { 
+                where: { 
+                    email: req.body.email 
+                } 
+            });
         
+        // If user doesn't exist, return 401 Unauthorized status with an error message
         if (!user) {
             return res.status(401).json({
-                message: 'Invalid credentials'
+                msg: 'Invalid credentials'
             });
         }
-        
+
+        // Comparing the provided password with the hashed password stored in the database
         const match = await bcrypt.compare(req.body.password, user.password);
         
+        // If passwords match, generate JWT token and return it with 200 OK status
         if (match) {
             const token = jwt.sign(
                 {
@@ -426,21 +438,23 @@ exports.login = async (req, res) => {
                 }, 
                     process.env.JWT_KEY, 
                 {
-                    expiresIn: '1h'
+                    expiresIn: '20m'
                 }
             );
             return res.status(200).json({
-                message: 'Auth successful',
+                msg: 'Auth successful',
                 accessToken: token
             });
         } else {
+            // If passwords don't match, return 401 Unauthorized status with an error message
             return res.status(401).json({
-                message: 'Invalid credentials'
+                msg: 'Invalid credentials'
             });
         }
     } catch (err) {
+        // If an error occurs, return 500 Internal Server Error status with an error message
         res.status(500).json({
-            error: err.message || 'Something went wrong. Please try again later'
+            error: err.msg || 'Something went wrong. Please try again later'
         });
     }
 };
