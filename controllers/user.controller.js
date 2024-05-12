@@ -184,9 +184,6 @@ exports.findAll = async (req, res) => {
  */
 exports.findOne = async (req, res) => {
     try {
-        // Find the user by their ID
-        //let user = await User.findByPk(req.params.user_id);
-
         let user = await User.findByPk(req.params.user_id, {
             include: [
                 {
@@ -240,15 +237,29 @@ exports.findOne = async (req, res) => {
     };
 };
 
-
 /**
- * Deletes a user by their ID.
+ * Deletes a user by their ID. This endpoint serves two purposes:
+ * 1. Deletes the logged-in user’s account and all associated data.
+ * 2. Deletes a specific user account and all associated data (only available for administrators).
  * 
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
 */
 exports.delete = async (req, res) => {
     try {
+        // Retrieve the user information from the token in the header
+        const loggedInUser = req.userData; 
+
+        //console.log(loggedInUser.user_id);
+        //console.log(req.params.user_id);
+
+        // Check if the logged-in user is an admin or if someone is attempting to delete their own account
+        if (loggedInUser.type !== 'admin' && loggedInUser.user_id !== parseInt(req.params.user_id)) {
+            return res.status(403).json({ 
+                success: false, 
+                msg: "Unauthorized: You don't have permission to perform this action." });
+        }
+
         // Attempt to delete the user with the specified ID
         let result = await User.destroy({ 
             where: { user_id: req.params.user_id}
