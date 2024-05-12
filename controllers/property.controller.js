@@ -8,6 +8,7 @@ const Property = db.property;
 //const Facility = db.facility;
 // Define a variable Photo to represent the User model in the database
 //const Photo = db.photo;
+const Rating = db.rating;
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError, Sequelize } = require('sequelize');
@@ -174,7 +175,20 @@ exports.findAll = async (req, res) => {
                     ],
                     //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
                 },
-            ]
+            ],
+        });
+
+        // Calculate average rating for each property
+        properties.forEach(async property => {
+            // Calculate the average rating
+            let totalStars = 0;
+            property.Ratings.forEach(rating => {
+                totalStars += rating.number_stars;
+            });
+            const averageRating = totalStars / property.Ratings.length;
+
+            // Add the average rating to the property object
+            property.dataValues.averageRating = averageRating;
         });
 
         // Calculate the total number of properties after applying pagination
@@ -293,9 +307,8 @@ exports.findOne = async (req, res) => {
                     attributes: [
                         "number_stars", 
                         "comment", 
-                        //[Sequelize.fn('AVG', Sequelize.col('number_stars')), 'average_rating']
                     ],
-                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
+                    
                 },
             ]
         });
@@ -307,6 +320,16 @@ exports.findOne = async (req, res) => {
                 msg: `Property with ID ${req.params.property_id} not found.`
             });
         }
+
+        // Calculate the average rating
+        let totalStars = 0;
+        property.Ratings.forEach(rating => {
+            totalStars += rating.number_stars;
+        });
+        const averageRating = totalStars / property.Ratings.length;
+
+        // Add the average rating to the property object
+        property.dataValues.averageRating = averageRating;
 
         // If property is found, return it along with links for actions (HATEOAS)
         res.status(200).json({ 
