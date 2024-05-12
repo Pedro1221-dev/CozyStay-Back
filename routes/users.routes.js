@@ -26,7 +26,7 @@ router.route('/current/bookings')
 
 router.route('/current/favorites')
     .get( checkAuth, userController.findFavoritePropertiesCurrent ) // PROTECTED (user logged in)
-    //.post( usersController.xxx ) // PROTECTED
+    .post( checkAuth, userController.addFavorite ) // PROTECTED
 
 router.route('/:user_id')
     .get( userController.findOne )  // PUBLIC
