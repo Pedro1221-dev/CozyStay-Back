@@ -88,7 +88,7 @@ exports.findAll = async (req, res) => {
                 {
                     model: db.property,
                     attributes: ["property_id"],
-                    as: 'favorite-properties',
+                    as: 'favoriteProperty',
                     through: { attributes: [] } // Specifing atributes from the user_badge table
                 }, 
             ]
@@ -204,7 +204,7 @@ exports.findOne = async (req, res) => {
                 {
                     model: db.property,
                     attributes: ["property_id"],
-                    as: 'favorite-properties',
+                    as: 'favoriteProperty',
                     through: { attributes: [] } // Specifing atributes from the user_badge table
                 }, 
             ]
@@ -555,7 +555,7 @@ exports.findOneCurrent = async (req, res) => {
                 {
                     model: db.property,
                     attributes: ["property_id"],
-                    as: 'favorite-properties',
+                    as: 'favoriteProperty',
                     through: { attributes: [] } // Specifing atributes from the user_badge table
                 }, 
             ]
@@ -830,7 +830,7 @@ exports.findFavoritePropertiesCurrent = async (req, res) => {
             include: [
                 {
                     model: db.property,
-                    as: 'favorite-properties',
+                    as: 'favoriteProperty',
                 }
             ],
             attributes: [] // Exclude other attributes of the user
@@ -864,6 +864,46 @@ exports.findFavoritePropertiesCurrent = async (req, res) => {
         
     };
 };
+
+/**
+ * Adds a property to the favorites.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.addFavorite = async (req, res) => {
+    try {
+        // Find the user by their ID
+        const user = await User.findByPk(req.userData.user_id);
+        // Find the property by its ID
+        const property = await Property.findByPk(req.body.property_id);
+
+        // Check if the property exists
+        if (!property) {
+            // If the property does not exist, return a 404 response
+            return res.status(404).json({ 
+                success: false, 
+                msg: `Property with ID ${req.body.property_id} not found.` });
+        }
+
+        // Add the property to the user's favorite properties (Magic Method from the N:N relation)
+        await user.addFavoriteProperty(property);
+
+        // Return a success message along with status code 201 (Created)
+        res.status(201).json({
+            success: true,
+            msg: "Property added to the favorites sucessfully.",
+        });
+    }
+    catch (err) {
+        // If an error occurs, return a 500 response with the error message
+        return res.status(500).json({
+            success: false, 
+            msg: err.message || "Some error occurred while adding property to the favorites."
+        });
+    };
+};
+
 
 
 
