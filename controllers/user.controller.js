@@ -904,6 +904,64 @@ exports.addFavorite = async (req, res) => {
     };
 };
 
+/**
+ * Remove a property from the favorites.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.deleteFavorite = async (req, res) => {
+    try {
+        // Find the user by their ID
+        const user = await User.findByPk(req.userData.user_id);
+        // Find the property by its ID
+        const property = await Property.findByPk(req.params.property_id);
+
+        // Verifying if the property is in the user's favorite list (Magic Method from the N:N relation)
+        const isFavorite = await user.hasFavoriteProperty(property);
+
+        // Check if the property exists
+        if (!property) {
+            // If the property does not exist, return a 404 response
+            return res.status(404).json({ 
+                success: false, 
+                msg: `Property with ID ${req.params.property_id} not found.` });
+        }
+
+        // If the property is not in the favorites list, return a 404 response
+        if (!isFavorite) {
+            return res.status(404).json({
+                success: false,
+                msg: `Property with ID ${req.params.property_id} is not in the user's favorites.`
+            });
+        }
+
+        // Check if the property exists
+        if (!property) {
+            // If the property does not exist, return a 404 response
+            return res.status(404).json({ 
+                success: false, 
+                msg: `Property with ID ${req.params.property_id} not found.` });
+        }
+
+        // Remove the property to the user's favorite properties (Magic Method from the N:N relation)
+        await user.removeFavoriteProperty(property);
+
+        // Return a success message along with status code 200 (Ok)
+        res.status(200).json({
+            success: true,
+            msg: "Property removed from favorites successfully.",
+        });
+    }
+    catch (err) {
+        // If an error occurs, return a 500 response with the error message
+        return res.status(500).json({
+            success: false, 
+            msg: err.message || "Some error occurred while removing property from favorites."
+        });
+    };
+};
+
 
 
 
