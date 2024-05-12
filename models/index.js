@@ -128,14 +128,14 @@ db.facility.belongsToMany(db.property, {
 // N:N (USER - PROPERTY) (FAVORITE PROPERTIES)
 db.user.belongsToMany(db.property, {
     through: 'favorite', 
-    as: 'favorite-properties',
+    as: 'favoriteProperty',
     timestamps: false,
     foreignKey: 'user_id', // Foreign key in the favorite table that references the user table
     otherKey: 'property_id' // Foreign key in the favorite table that references the property table
 });
 db.property.belongsToMany(db.user, {
     through: 'favorite', 
-    as: 'favorite-properties',
+    as: 'favoriteProperty',
     timestamps: false,
     foreignKey: 'property_id', // Foreign key in the favorite table that references the property table
     otherKey: 'user_id' // Foreign key in the favorite table that references the user table
