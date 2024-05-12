@@ -8,7 +8,7 @@ const Property = db.property;
 //const Facility = db.facility;
 // Define a variable Photo to represent the User model in the database
 //const Photo = db.photo;
-const Rating = db.rating;
+
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError, Sequelize } = require('sequelize');
@@ -164,16 +164,13 @@ exports.findAll = async (req, res) => {
                 {
                     model: db.photo,
                     attributes: ["url_photo"],
-                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
                 },
                 {
                     model: db.rating,
                     attributes: [
                         "number_stars", 
                         "comment", 
-                        //[Sequelize.fn('AVG', Sequelize.col('number_stars')), 'average_rating']
                     ],
-                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
                 },
             ],
         });
@@ -300,7 +297,6 @@ exports.findOne = async (req, res) => {
                 {
                     model: db.photo,
                     attributes: ["url_photo"],
-                    //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
                 },
                 {
                     model: db.rating,
@@ -308,8 +304,20 @@ exports.findOne = async (req, res) => {
                         "number_stars", 
                         "comment", 
                     ],
-                    
                 },
+            ]
+        });
+
+            // Find the owner of the property
+        let owner = await db.user.findByPk(property.owner_id, {
+            attributes: ['user_id', 'name', 'url_avatar', 'host_since'],
+            include: [
+                {
+                    model: db.language,
+                    attributes: ["language"],
+                    as: 'language',
+                    through: { attributes: [] } // Specifing atributes from the user_language table
+                }, 
             ]
         });
 
@@ -328,8 +336,28 @@ exports.findOne = async (req, res) => {
         });
         const averageRating = totalStars / property.Ratings.length;
 
+        // Calculate the average rating for all properties of the owner
+        const averageRatingUser = await db.rating.findOne({
+            attributes: [
+                [Sequelize.fn('AVG', Sequelize.col('number_stars')), 'average_rating']
+            ],
+            where: { property_id: { [Sequelize.Op.in]: Sequelize.literal(`(SELECT property_id FROM property WHERE owner_id = ${property.owner_id})`) } }
+        });
+
+        // Count the total number of reviews for all properties of the owner
+        const totalReviews = await db.rating.count({
+            where: { property_id: { [Sequelize.Op.in]: Sequelize.literal(`(SELECT property_id FROM property WHERE owner_id = ${property.owner_id})`) } }
+        });
+
         // Add the average rating to the property object
         property.dataValues.averageRating = averageRating;
+
+        // Attach the total reviews count to the owner object
+        owner.dataValues.total_reviews = totalReviews;
+        // Attach the average rating to the owner object
+        owner.dataValues.userRating = averageRatingUser;
+        // Attach the owner information to the property object
+        property.dataValues.host = owner
 
         // If property is found, return it along with links for actions (HATEOAS)
         res.status(200).json({ 
