@@ -15,7 +15,7 @@ router.route('/')
     .post(userController.create)  // PUBLIC
 
 router.route('/current')
-    .get( checkAuth, userController.findOneCurrent )  // PROTECTED
+    .get( checkAuth, userController.findOneCurrent )  // PROTECTED (user logged in)
     .patch( checkAuth, userController.updateCurrent ) // PROTECTED (user logged in)
 
 router.route('/current/properties')
@@ -26,18 +26,18 @@ router.route('/current/bookings')
 
 router.route('/current/favorites')
     .get( checkAuth, userController.findFavoritePropertiesCurrent ) // PROTECTED (user logged in)
-    .post( checkAuth, userController.addFavorite ) // PROTECTED
+    .post( checkAuth, userController.addFavorite ) // PROTECTED (user logged in)
+
+router.route('/current/favorites/:property_id')
+    .delete( checkAuth, userController.deleteFavorite ) // PROTECTED (user logged in)
 
 router.route('/:user_id')
     .get( userController.findOne )  // PUBLIC
-    .delete( checkAuth, userController.delete) // PROTECTED
+    .delete( checkAuth, userController.delete) // PROTECTED (user logged in)
     .patch( checkAuth, checkAdmin, userController.update) // PROTECTED (admin logged in)
 
 router.route('/:user_id/properties')
     .get( userController.findProperties )  // PUBLIC
-
-router.route('/current/favorites/:property_id')
-    //.delete( usersController.xxx ) // PROTECTED
 
 router.route('/verifyEmail')
     //.post( usersController.xxx ) // PUBLIC
