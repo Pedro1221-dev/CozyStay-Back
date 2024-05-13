@@ -45,6 +45,8 @@ db.photo = require("./photo.model.js")(sequelize, DataTypes);
 db.seasonPrice = require("./seasonPrice.model.js")(sequelize, DataTypes);
 //export facility model
 db.facility = require("./facility.model.js")(sequelize, DataTypes);
+//export user_otp model
+db.user_otp = require("./userOTP.model.js")(sequelize, DataTypes);
 
 
 // Define the relationships
@@ -64,6 +66,16 @@ db.property.hasMany(db.rating, {
     onDelete: "CASCADE"
 });
 db.rating.belongsTo(db.property);
+
+// 1:N - 1 user, N otp_codes
+// if user is deleted, delete all the otp associated with it
+db.user.hasMany(db.user_otp, {
+    foreignKey: 'user_id',
+    onDelete: "CASCADE"
+});
+db.user_otp.belongsTo(db.user, {
+    foreignKey: 'user_id',
+});
 
 // N:N (USER - LANGUAGE)
 db.user.belongsToMany(db.language, {
