@@ -42,6 +42,9 @@ router.route('/:user_id/properties')
 router.route('/verify-email')
     .post( userController.verifyEmail ) // PUBLIC
 
+router.route('/resend-email')
+    .post( userController.resendEmail ) // PUBLIC
+
 router.route('/login')
     .post( userController.login ) // PUBLIC
 
