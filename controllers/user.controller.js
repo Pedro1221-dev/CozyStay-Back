@@ -624,11 +624,40 @@ exports.verifyEmail = async (req, res) => {
             success: true,
             msg: "User's email successfully verified",
             links: [
-                { "rel": "self", "href": `/user/${newUser.user_id}`, "method": "GET" },
-                { "rel": "delete", "href": `/user/${newUser.user_id}`, "method": "DELETE" },
-                { "rel": "modify", "href": `/user/${newUser.user_id}`, "method": "PATCH" },
+                { "rel": "self", "href": `/user/${user_id}`, "method": "GET" },
+                { "rel": "delete", "href": `/user/${user_id}`, "method": "DELETE" },
+                { "rel": "modify", "href": `/user/${user_id}`, "method": "PATCH" },
             ]
         });
+    }
+    catch (err) {
+        // If an error occurs, return a 500 response with an error message
+        return res.status(500).json({
+                success: false, 
+                msg: err.message || "Some error occurred while verifing the user's email."
+            });
+    };
+};
+
+/**
+ * Resends the email verification for a user account.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.resendEmail = async (req, res) => {
+    try {
+        const { user_id, email } = req.body;
+
+        // Delete the OTP record from the database
+        await UserOTP.destroy({
+            where: {
+                user_id: user_id
+            }
+        });
+        
+        // Call sendOTPVerificationEmail function to resend the verification email
+        sendOTPVerificationEmail(user_id, email, res);
     }
     catch (err) {
         // If an error occurs, return a 500 response with an error message
