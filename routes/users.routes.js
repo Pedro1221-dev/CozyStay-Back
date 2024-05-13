@@ -39,8 +39,8 @@ router.route('/:user_id')
 router.route('/:user_id/properties')
     .get( userController.findProperties )  // PUBLIC
 
-router.route('/verifyEmail')
-    //.post( usersController.xxx ) // PUBLIC
+router.route('/verify-email')
+    .post( userController.verifyEmail ) // PUBLIC
 
 router.route('/login')
     .post( userController.login ) // PUBLIC
