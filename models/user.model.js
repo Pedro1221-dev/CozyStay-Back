@@ -121,7 +121,12 @@ module.exports = (sequelize, DataTypes) => {
                 msg: "Invalid date"
               }
             }
-        }
+        },
+        verified: {
+            type: DataTypes.BOOLEAN, // 0 represents false, 1 represents true
+            defaultValue: false,  
+            allowNull: false,
+        },
     }, {
         tableName: 'user', // Specify the table name explicitly
         timestamps: false // Disable automatic creation of `createdAt` and `updatedAt` columns
