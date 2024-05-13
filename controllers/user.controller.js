@@ -1,7 +1,11 @@
+const fs = require('fs');
+
 // Importing the bcrypt library
 const bcrypt = require('bcrypt');
 // Importing the jsonwebtoken library
 const jwt = require('jsonwebtoken');
+// Importing the nodemailer library
+const nodemailer = require("nodemailer");
 // Importing all the models
 const db = require("../models/index.js");
 // Define a variable User to represent the User model in the database
@@ -14,9 +18,30 @@ const User = db.user;
 const Property = db.property;
 const Booking = db.booking;
 const Favorite = db.favorite;
+const UserOTP = db.user_otp;
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
+
+// Nodemailer Stuff
+let transporter = nodemailer.createTransport({
+    host: 'smtp.outlook.com',
+    port: 587,
+    secure: false, 
+    auth: {
+        user: process.env.AUTH_EMAIL, 
+        pass: process.env.AUTH_PASS, 
+    }
+});
+
+transporter.verify((error, success) => {
+    if (error) {
+        console.log(error);
+    } else {
+        console.log("Ready for message");
+        console.log(success);
+    }
+});
 
 /**
  * Retrieves a list of users with optional pagination and filtering.
@@ -423,7 +448,7 @@ exports.updateCurrent = async (req, res) => {
 exports.create = async (req, res) => {
     try {
         // Extracts the password property from the request body
-        const { password } = req.body;
+        const { password, email } = req.body;
 
         // Validate the password
         // Create a temporary instance of the User model with only the password set
@@ -449,16 +474,8 @@ exports.create = async (req, res) => {
         // Save the user in the database
         let newUser = await User.create(req.body);
 
-        // Return a sucess message,along with links for actions (HATEOAS)
-        res.status(201).json({
-            success: true,
-            msg: "User successfully created.",
-            links: [
-                { "rel": "self", "href": `/user/${newUser.user_id}`, "method": "GET" },
-                { "rel": "delete", "href": `/user/${newUser.user_id}`, "method": "DELETE" },
-                { "rel": "modify", "href": `/user/${newUser.user_id}`, "method": "PATCH" },
-            ]
-        });
+        // Send OTP verification email to the user
+        await sendOTPVerificationEmail(newUser.user_id, email, res);
     }
     catch (err) {
         // If a validation error occurs, return a 400 response with error messages
@@ -476,6 +493,148 @@ exports.create = async (req, res) => {
             res.status(500).json({
                 success: false, 
                 msg: err.message || "Some error occurred while creating the user."
+            });
+    };
+};
+
+/**
+ * Sends OTP verification email to the provided email address.
+ * @param {string} user_id - The user ID associated with the email.
+ * @param {string} email - The email address to send the verification email to.
+ * @param {Object} res - The response object to send HTTP response.
+ */
+const sendOTPVerificationEmail = async (user_id, email, res) => {
+    try {
+        // Generate a random OTP
+        const otp = `${Math.floor(100000 + Math.random() * 900000)}`;
+
+        // Read the email template from file
+        const emailTemplate = fs.readFileSync('./html/email_verification.html', 'utf8');
+
+        // Replace the placeholder {{otp}} with the actual OTP in the email template
+        const emailBody = emailTemplate.replace('{{otp}}', otp); 
+
+        // Configure email options
+        const mailOptions = {
+            from: process.env.AUTH_EMAIL,
+            to: email,
+            subject: "Verify your email",
+            html: emailBody
+        };
+
+        // Hash the otp before saving it to the database
+        const hashedOTP = await bcrypt.hash(otp, 10);
+
+        // Save the hashed OTP to the database, along with user_id and expiration time
+        await UserOTP.create({
+            user_id: user_id,
+            otp_code: hashedOTP,
+            created_at: new Date(),
+            expires_at: new Date(Date.now() + 3600 * 1000) // 1 hour expiration
+        });
+
+        // Send the email using nodemailer transporter
+        await transporter.sendMail(mailOptions);
+
+        // Return a success message
+        res.status(200).json({
+            success: true,
+            msg: "Verification otp email sent",
+            data: {
+                user_id: user_id,
+                email,
+            }
+        });
+    } catch (err) {
+        //console.error("Error sending OTP verification email:", err);
+        // If an error occurs, return a 500 response with an error message
+        return res.status(500).json({
+            success: false, 
+            msg: err.message || "Some error occurred while sending the otp email."
+        });
+    }
+}
+
+/**
+ * Verifies the email associated with a user account using the provided OTP.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.verifyEmail = async (req, res) => {
+    try {
+        const { user_id, otp } = req.body;
+
+        // Find the OTP record associated with the user
+        const otpRecord = await UserOTP.findOne({
+            where: {
+                user_id: user_id
+            }
+        });
+
+        // If OTP record not found, return an error
+        if (!otpRecord) {
+            return res.status(400).json({
+                success: false,
+                msg: "Account record doesn't exist or has been verified already."
+            });
+        }
+
+        // If OTP has expired, delete the OTP record and return an error
+        if (otpRecord.expires_at < new Date()) {
+            await UserOTP.destroy({
+                where: {
+                    user_id: user_id
+                }
+            });
+            return res.status(400).json({
+                success: false,
+                msg: "The code has expired."
+            });
+        }
+
+        // Compare the provided OTP with the hashed OTP from the database
+        const isMatch = await bcrypt.compare(otp, otpRecord.otp_code);
+        //console.log(isMatch);
+
+        // If OTPs don't match, return an error
+        if (!isMatch) {
+            return res.status(400).json({
+                success: false,
+                msg: "Invalid OTP. Please try again."
+            });
+        } 
+
+        // Update the user's email verification status in the database
+        await User.update({verified: true}, {
+            where: {
+                user_id: user_id
+            }
+        });
+
+        // Delete the OTP record from the database
+        await UserOTP.destroy({
+            where: {
+                user_id: user_id
+            }
+        });
+
+        // Return a sucess message,along with links for actions (HATEOAS)
+        res.status(200).json({
+            success: true,
+            msg: "User's email successfully verified",
+            links: [
+                { "rel": "self", "href": `/user/${newUser.user_id}`, "method": "GET" },
+                { "rel": "delete", "href": `/user/${newUser.user_id}`, "method": "DELETE" },
+                { "rel": "modify", "href": `/user/${newUser.user_id}`, "method": "PATCH" },
+            ]
+        });
+    }
+    catch (err) {
+        // If an error occurs, return a 500 response with an error message
+        return res.status(500).json({
+                success: false, 
+                msg: err.message || "Some error occurred while verifing the user's email."
             });
     };
 };
