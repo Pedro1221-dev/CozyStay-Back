@@ -1,5 +1,5 @@
+// Importing the file system module
 const fs = require('fs');
-
 // Importing the bcrypt library
 const bcrypt = require('bcrypt');
 // Importing the jsonwebtoken library
