@@ -380,7 +380,7 @@ exports.update = async (req, res) => {
  */
 exports.updateCurrent = async (req, res) => {
     try {
-        // Extract owner ID from request parameters
+        // Retrieve the user ID from the token in the header
         const user_id = req.userData.user_id;
 
         // Find the user by their ID
