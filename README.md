@@ -10,3 +10,58 @@ Students:
 * Simão Freitas (40220191@esmad.ipp.pt)
   
 Back-end of CozyStay
+
+# Package Installation (One by One)
+### Cross-origin resource sharing
+
+```sh
+npm install cors
+```
+
+### Dotenv
+
+```sh
+npm install dotenv
+```
+
+### Express
+
+```sh
+npm install express
+```
+
+### Sequelize
+
+```sh
+npm install sequelize
+```
+
+### mysql2
+
+```sh
+npm install mysql2
+```
+
+### bcrypt
+
+```sh
+npm install bcrypt
+```
+
+### jsonwebtoken
+
+```sh
+npm install jsonwebtoken
+```
+
+### nodemailer
+
+```sh
+npm install nodemailer
+```
+
+# Bulk Package Installation
+
+```sh
+npm install cors dotenv express sequelize mysql2 bcrypt jsonwebtoken nodemailer
+```
