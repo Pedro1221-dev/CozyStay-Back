@@ -35,8 +35,6 @@ db.booking = require("./booking.model.js")(sequelize, DataTypes);
 db.language = require("./language.model.js")(sequelize, DataTypes);
 //export Badge model
 db.badge = require("./badge.model.js")(sequelize, DataTypes);
-//export Rating model
-/* db.rating = require("./rating.model.js")(sequelize, DataTypes); */
 //export PaymentMethod model
 db.paymentMethod = require("./paymentMethod.model.js")(sequelize, DataTypes);
 //export Photo model
@@ -49,16 +47,6 @@ db.facility = require("./facility.model.js")(sequelize, DataTypes);
 db.user_otp = require("./userOTP.model.js")(sequelize, DataTypes);
 
 
-// Define the relationships
-// 1:1 - 1 rating, 1 booking
-/* db.rating.hasOne(db.booking, {
-    foreignKey: 'booking_id',
-});
-db.booking.belongsTo(db.rating, {
-    foreignKey: 'booking_id',
-});
-
- */
 // 1:N - 1 user, N bookings
 db.user.hasMany(db.booking, {
     onDelete: "CASCADE"
@@ -85,14 +73,6 @@ db.property.hasMany(db.photo, {
     onDelete: "CASCADE"
 });
 db.photo.belongsTo(db.property);
-
-// 1:N - 1 property, N ratings
-// if property is deleted, delete all the ratings associated with it
-/* db.property.hasMany(db.rating, {
-    foreignKey: 'property_id',
-    onDelete: "CASCADE"
-});
-db.rating.belongsTo(db.property); */
 
 // 1:N - 1 user, N otp_codes
 // if user is deleted, delete all the otp associated with it
