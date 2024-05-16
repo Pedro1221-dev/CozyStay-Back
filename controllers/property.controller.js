@@ -304,7 +304,20 @@ exports.findOne = async (req, res) => {
                         "number_stars", 
                         "comment", 
                     ],
+                    include: [
+                        {
+                            model: db.booking,
+                            attributes: [],
+                            include: [
+                                {
+                                    model: db.user,
+                                    attributes: ['user_id', 'name', 'url_avatar']
+                                }
+                            ]
+                        }
+                    ]
                 },
+                
             ]
         });
 

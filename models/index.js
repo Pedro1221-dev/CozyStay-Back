@@ -50,6 +50,19 @@ db.user_otp = require("./userOTP.model.js")(sequelize, DataTypes);
 
 
 // Define the relationships
+// 1:1 - 1 rating, 1 booking
+db.rating.hasOne(db.booking, {
+    foreignKey: 'booking_id',
+});
+db.booking.belongsTo(db.rating);
+
+// 1:N - 1 user, N bookings
+db.user.hasMany(db.booking, {
+    onDelete: "CASCADE"
+});
+db.booking.belongsTo(db.user, {
+    foreignKey: 'guest_id'
+});
 
 // 1:N - 1 property, N photo
 // if property is deleted, delete all the photo associated with it
