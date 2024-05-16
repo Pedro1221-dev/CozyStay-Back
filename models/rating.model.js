@@ -1,4 +1,4 @@
-module.exports = (sequelize, DataTypes) => {
+/* module.exports = (sequelize, DataTypes) => {
     const Rating = sequelize.define("Rating", {
         rating_id: {
             type: DataTypes.INTEGER,
@@ -53,4 +53,4 @@ module.exports = (sequelize, DataTypes) => {
         timestamps: false // Disable automatic creation of `createdAt` and `updatedAt` columns
     });
     return Rating;
-}; 
+};  */
