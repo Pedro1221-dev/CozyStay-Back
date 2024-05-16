@@ -11,7 +11,7 @@ const Property = db.property;
 
 
 //"Op" necessary for LIKE operator
-const { Op, ValidationError, UniqueConstraintError, Sequelize } = require('sequelize');
+const { Op, ValidationError, UniqueConstraintError, Sequelize, where } = require('sequelize');
 
 /**
  * Retrieves a list of proprieties with optional pagination, filtering and sorting.
@@ -143,54 +143,58 @@ exports.findAll = async (req, res) => {
             return res.status(400).json({ message: "Page must be 1 or a positive integer" });
         }
 
+        // Merge the existing 'where' conditions with the status atribute (return only available properties)
+        searchOptions.where = {
+            ...searchOptions.where,
+            status: 'available'
+        };
+
         // Find properties with pagination and search options
         const properties = await Property.findAll({
             limit: limit,
             offset: offset,
             ...searchOptions,
+            attributes: ["property_id", "city", "country", "title", "price", "number_bedrooms", "number_beds"],
             include: [
                 {
-                    model: db.paymentMethod,
-                    as: 'payment-method',
-                    attributes: ["description"],
-                    through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
-                },
-                {
-                    model: db.facility,
-                    as: 'facilities',
-                    attributes: ["name"],
-                    through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
-                },
-                {
                     model: db.photo,
+                    as: 'photos',
                     attributes: ["url_photo"],
                 },
                 {
-                    model: db.rating,
-                    attributes: [
-                        "number_stars",
-                        "comment",
-                    ],
+                    model: db.booking, // Assuming 'rating' is a Booking model
+                    as: 'rating', // Assuming 'rating' is the alias for the association
+                    attributes: ["number_stars"], // Assuming 'number_stars' is the attribute for the rating
                 },
             ],
         });
 
-        // Calculate average rating for each property
-        properties.forEach(async property => {
-            // Calculate the average rating
+        // Loop through each property to calculate totalStars and numValidRatings
+        for (const property of properties) {
+            /// Calculate the average rating
             let totalStars = 0;
-            property.Ratings.forEach(rating => {
-                totalStars += rating.number_stars;
-            });
-            const averageRating = totalStars / property.Ratings.length;
-
-            // Add the average rating to the property object
+            // Counter to track the number of valid ratings
+            let numValidRatings = 0; 
+            for (const booking of property.rating) {
+                // Check if the number of stars is not null (review was done)
+                if (booking.number_stars !== null) { 
+                    // If not null, add the number of stars to the total
+                    totalStars += booking.number_stars;
+                    // Increment the counter for valid ratings
+                    numValidRatings++; 
+                }
+            }
+            // Calculate the average rating for each property
+            const averageRating = totalStars / numValidRatings;
+            // Add the average rating to each property
             property.dataValues.averageRating = averageRating;
-        });
+        }
 
         // Calculate the total number of properties after applying pagination
         const totalProperties = await Property.count({
-            where: searchOptions.where // Apply the same search options for counting
+            where: {
+                ...searchOptions.where, // Merge existing search conditions
+            }
         });
         // Calculate the total number of pages based on the total number of properties and the limit per page
         const totalPages = Math.ceil(totalProperties / limit);
@@ -314,6 +318,14 @@ exports.findOne = async (req, res) => {
             ]
         });
 
+        // If the property is not found, return a 404 response
+        if (!property) {
+            return res.status(404).json({
+                success: false,
+                msg: `Property with ID ${req.params.property_id} not found.`
+            });
+        }
+
         // Find the owner of the property
         let owner = await db.user.findByPk(property.owner_id, {
             attributes: ['user_id', 'name', 'url_avatar', 'host_since'],
@@ -326,14 +338,6 @@ exports.findOne = async (req, res) => {
                 },
             ]
         });
-
-        // If the property is not found, return a 404 response
-        if (!property) {
-            return res.status(404).json({
-                success: false,
-                msg: `Property with ID ${req.params.property_id} not found.`
-            });
-        }
 
         /// Calculate the average rating
         let totalStars = 0;
@@ -354,6 +358,8 @@ exports.findOne = async (req, res) => {
         // Calculate the average rating
         const averageRating = totalStars / numValidRatings;
 
+        // Calculate the average rating of the host
+        // Finds the average of the number_stars column from the booking table
         const averageRatingHost = await db.booking.findOne({
             attributes: [
                 [Sequelize.fn('AVG', Sequelize.col('number_stars')), 'average_rating']
@@ -365,6 +371,8 @@ exports.findOne = async (req, res) => {
             }]
         });
 
+        // Count total reviews for the host
+        // Counts the number of bookings where the property belongs to the host and has a non-null number_stars
         const totalReviewsHost = await db.booking.count({
             where: {
                 property_id: {
@@ -377,8 +385,6 @@ exports.findOne = async (req, res) => {
                 }
             }
         });
-        
-        //console.log("Total Reservas:", totalReviewsHost);
 
         // Add the average rating to the property object
         property.dataValues.averageRating = averageRating;
@@ -402,7 +408,6 @@ exports.findOne = async (req, res) => {
 
     }
     catch (err) {
-        // console.log(err)
         // If an error occurs, return a 500 response with an error message
         return res.status(500).json({
             success: false,
