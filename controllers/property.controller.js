@@ -23,16 +23,16 @@ exports.findAll = async (req, res) => {
     try {
         // Initialize search options object
         const searchOptions = {};
- 
+
         // Destructure query parameters
-        const { 
-            limit: queryLimit, 
-            page: queryPage, 
-            destination, 
-            number_guests_allowed, 
-            price, 
-            number_bedrooms, 
-            number_beds, 
+        const {
+            limit: queryLimit,
+            page: queryPage,
+            destination,
+            number_guests_allowed,
+            price,
+            number_bedrooms,
+            number_beds,
             number_bathrooms,
             typology,
             sort,
@@ -51,7 +51,7 @@ exports.findAll = async (req, res) => {
         if (destination) {
             // Split the destination into city and country
             const [city, country] = destination.split(',').map(item => item.trim());
-            
+
             // Create the where clause based on city and/or country
             if (city && country) {
                 // If both city and country are provided, search by both
@@ -64,7 +64,7 @@ exports.findAll = async (req, res) => {
                 searchOptions.where = { country: country };
             }
         }
-        
+
         // Initializing variables to store minimum price and maximum price
         let minPrice, maxPrice;
         if (price) {
@@ -94,7 +94,7 @@ exports.findAll = async (req, res) => {
             }
 
             // Merge the existing 'where' conditions with the new 'price' range condition
-            searchOptions.where = { 
+            searchOptions.where = {
                 ...searchOptions.where,
                 price: priceCondition
             };
@@ -120,9 +120,9 @@ exports.findAll = async (req, res) => {
         // Add 'typology' query parameter to search options if provided
         if (typology) {
             const selectedTypologies = typology.split(',').map(t => t.trim());
-            searchOptions.where = { 
-                ...searchOptions.where, 
-                typology: selectedTypologies 
+            searchOptions.where = {
+                ...searchOptions.where,
+                typology: selectedTypologies
             };
         }
 
@@ -133,7 +133,7 @@ exports.findAll = async (req, res) => {
 
             searchOptions.order = [['property_id', selectedDirection]];
         }
-        
+
         // Validate query parameters
         if (isNaN(limit) || limit <= 5) {
             return res.status(400).json({ message: "Limit must be a positive integer, greater than 5" });
@@ -154,13 +154,13 @@ exports.findAll = async (req, res) => {
                     as: 'payment-method',
                     attributes: ["description"],
                     through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
-                }, 
+                },
                 {
                     model: db.facility,
                     as: 'facilities',
                     attributes: ["name"],
                     through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
-                }, 
+                },
                 {
                     model: db.photo,
                     attributes: ["url_photo"],
@@ -168,8 +168,8 @@ exports.findAll = async (req, res) => {
                 {
                     model: db.rating,
                     attributes: [
-                        "number_stars", 
-                        "comment", 
+                        "number_stars",
+                        "comment",
                     ],
                 },
             ],
@@ -224,8 +224,8 @@ exports.findAll = async (req, res) => {
         }));
 
         // Send response with pagination and data
-        res.status(200).json({ 
-            success: true, 
+        res.status(200).json({
+            success: true,
             pagination: {
                 total: totalProperties,
                 pages: totalPages,
@@ -234,37 +234,37 @@ exports.findAll = async (req, res) => {
             },
             data: propertiesWithLinks,
             links: [
-            { 
-                "rel": "add-property", 
-                "href": `/properties`, 
-                "method": "POST" 
-            },
-            { 
-                "rel": "previous-page",
-                "href": `/properties?limit=${limit}&page=${previousPage}`,
-                "method": "GET"
-            },
-            { 
-                "rel": "next-page",
-                "href": `/properties?limit=${limit}&page=${nextPage}`,
-                "method": "GET"
-            },
-            { 
-                "rel": "last-page",
-                "href": `/properties?limit=${limit}&page=${totalPages}`,
-                "method": "GET"
-            },
-            { 
-                "rel": "first-page",
-                "href": `/properties?limit=${limit}&page=1`,
-                "method": "GET"
-            }
+                {
+                    "rel": "add-property",
+                    "href": `/properties`,
+                    "method": "POST"
+                },
+                {
+                    "rel": "previous-page",
+                    "href": `/properties?limit=${limit}&page=${previousPage}`,
+                    "method": "GET"
+                },
+                {
+                    "rel": "next-page",
+                    "href": `/properties?limit=${limit}&page=${nextPage}`,
+                    "method": "GET"
+                },
+                {
+                    "rel": "last-page",
+                    "href": `/properties?limit=${limit}&page=${totalPages}`,
+                    "method": "GET"
+                },
+                {
+                    "rel": "first-page",
+                    "href": `/properties?limit=${limit}&page=1`,
+                    "method": "GET"
+                }
             ]
         });
     } catch (err) {
         // If an error occurs, respond with an error status code and message
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             msg: "Some error occurred while retrieving the properties."
         });
     }
@@ -287,41 +287,34 @@ exports.findOne = async (req, res) => {
                     as: 'payment-method',
                     attributes: ["description"],
                     through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
-                }, 
+                },
                 {
                     model: db.facility,
                     as: 'facilities',
                     attributes: ["name"],
                     through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
-                }, 
+                },
                 {
                     model: db.photo,
+                    as: 'photos',
                     attributes: ["url_photo"],
                 },
                 {
-                    model: db.rating,
-                    attributes: [
-                        "number_stars", 
-                        "comment", 
-                    ],
+                    model: db.booking,
+                    as: 'rating',
+                    attributes: ["number_stars", "comment", "rating_date"],
                     include: [
-                        {
-                            model: db.booking,
-                            attributes: [],
-                            include: [
-                                {
-                                    model: db.user,
-                                    attributes: ['user_id', 'name', 'url_avatar']
-                                }
-                            ]
+                        { 
+                            model: db.user,
+                            attributes: ["user_id", "name", "url_avatar", "nationality"],
                         }
                     ]
+
                 },
-                
             ]
         });
 
-            // Find the owner of the property
+        // Find the owner of the property
         let owner = await db.user.findByPk(property.owner_id, {
             attributes: ['user_id', 'name', 'url_avatar', 'host_since'],
             include: [
@@ -330,53 +323,77 @@ exports.findOne = async (req, res) => {
                     attributes: ["language"],
                     as: 'language',
                     through: { attributes: [] } // Specifing atributes from the user_language table
-                }, 
+                },
             ]
         });
 
         // If the property is not found, return a 404 response
         if (!property) {
             return res.status(404).json({
-                success: false, 
+                success: false,
                 msg: `Property with ID ${req.params.property_id} not found.`
             });
         }
 
-        // Calculate the average rating
+        /// Calculate the average rating
         let totalStars = 0;
-        property.Ratings.forEach(rating => {
-            totalStars += rating.number_stars;
-        });
-        const averageRating = totalStars / property.Ratings.length;
+        // Counter to track the number of valid ratings
+        let numValidRatings = 0; 
 
-        // Calculate the average rating for all properties of the owner
-        const averageRatingUser = await db.rating.findOne({
+        // Loop through each booking/rating in the property
+        property.rating.forEach(booking => {
+            // Check if the number of stars is not null (review was not done)
+            if (booking.number_stars !== null) { 
+                // If not null, add the number of stars to the total
+                totalStars += booking.number_stars;
+                // Increment the counter for valid ratings
+                numValidRatings++; 
+            }
+        });
+
+        // Calculate the average rating
+        const averageRating = totalStars / numValidRatings;
+
+        const averageRatingHost = await db.booking.findOne({
             attributes: [
                 [Sequelize.fn('AVG', Sequelize.col('number_stars')), 'average_rating']
             ],
-            where: { property_id: { [Sequelize.Op.in]: Sequelize.literal(`(SELECT property_id FROM property WHERE owner_id = ${property.owner_id})`) } }
+            include: [{
+                model: db.property,
+                where: { owner_id: property.owner_id },
+                attributes: [],
+            }]
         });
 
-        // Count the total number of reviews for all properties of the owner
-        const totalReviews = await db.rating.count({
-            where: { property_id: { [Sequelize.Op.in]: Sequelize.literal(`(SELECT property_id FROM property WHERE owner_id = ${property.owner_id})`) } }
+        const totalReviewsHost = await db.booking.count({
+            where: {
+                property_id: {
+                    [Sequelize.Op.in]: db.sequelize.literal(
+                        `(SELECT property_id FROM property WHERE owner_id = ${property.owner_id})`
+                    )
+                },
+                number_stars: {
+                    [Sequelize.Op.not]: null
+                }
+            }
         });
+        
+        //console.log("Total Reservas:", totalReviewsHost);
 
         // Add the average rating to the property object
         property.dataValues.averageRating = averageRating;
-
         // Attach the total reviews count to the owner object
-        owner.dataValues.total_reviews = totalReviews;
+        owner.dataValues.total_reviews = totalReviewsHost;
         // Attach the average rating to the owner object
-        owner.dataValues.userRating = averageRatingUser;
+        owner.dataValues.userRating = averageRatingHost;  
         // Attach the owner information to the property object
         property.dataValues.host = owner
 
         // If property is found, return it along with links for actions (HATEOAS)
-        res.status(200).json({ 
-            success: true, 
+        res.status(200).json({
+            success: true,
             data: property,
-            links:[
+            links: [
                 { "rel": "self", "href": `/properties/${property.property_id}`, "method": "GET" },
                 { "rel": "delete", "href": `/properties/${property.property_id}`, "method": "DELETE" },
                 { "rel": "modify", "href": `/properties/${property.property_id}`, "method": "PUT" },
@@ -385,12 +402,13 @@ exports.findOne = async (req, res) => {
 
     }
     catch (err) {
+        // console.log(err)
         // If an error occurs, return a 500 response with an error message
-        return res.status(500).json({ 
-            success: false, 
+        return res.status(500).json({
+            success: false,
             msg: `Error retrieving property with ID ${req.params.property_id}.`
         });
-        
+
     };
 };
 
@@ -403,8 +421,8 @@ exports.findOne = async (req, res) => {
 exports.delete = async (req, res) => {
     try {
         // Attempt to delete the property with the specified ID
-        let result = await Property.destroy({ 
-            where: { property_id: req.params.property_id}
+        let result = await Property.destroy({
+            where: { property_id: req.params.property_id }
         });
 
 
@@ -412,21 +430,21 @@ exports.delete = async (req, res) => {
         if (result == 1) {
             // Return a success message if the property was found and deleted
             return res.status(200).json({
-                success: true, 
+                success: true,
                 msg: `Property with id ${req.params.property_id} was successfully deleted!`
             });
         }
 
-         // If the property was not found, return a 404 response
+        // If the property was not found, return a 404 response
         return res.status(404).json({
-            success: false, 
+            success: false,
             msg: `Property with ID ${req.params.property_id} not found.`
         });
     }
     catch (err) {
-         // If an error occurs, return a 500 response with an error message
+        // If an error occurs, return a 500 response with an error message
         res.status(500).json({
-            success: false, 
+            success: false,
             msg: `Error deleting property with ID ${req.params.property_id}.`
         });
     };
@@ -452,16 +470,16 @@ exports.update = async (req, res) => {
 
         // Attempt to update the property with the provided data
         let affectedRows = await Property.update(
-            req.body, { 
-                where: { 
-                    property_id: req.params.property_id
-                } 
-            });
+            req.body, {
+            where: {
+                property_id: req.params.property_id
+            }
+        });
 
         // If no rows were affected, return a success message indicating no updates were made
-        if(affectedRows[0] === 0){
+        if (affectedRows[0] === 0) {
             return res.status(404).json({
-                success: true, 
+                success: true,
                 msg: `No updates were made to property with ID ${req.params.property_id}.`
             });
         }
@@ -475,14 +493,14 @@ exports.update = async (req, res) => {
     catch (err) {
         // If a validation error occurs, return a 400 response with error messages
         if (err instanceof ValidationError)
-            return res.status(400).json({ 
-                success: false, 
-                msg: err.errors.map(e => e.message) 
+            return res.status(400).json({
+                success: false,
+                msg: err.errors.map(e => e.message)
             });
 
         // If an error occurs, return a 500 response with an error message
         res.status(500).json({
-            success: false, 
+            success: false,
             msg: `Error retrieving property with ID ${req.params.property_id}.`
         });
     };
@@ -498,7 +516,7 @@ exports.create = async (req, res) => {
     try {
         // Extracts the properties from the request body
         // const { owner_id, title, city, country, address, number_bedrooms, number_beds, number_bathrooms, number_guests_allowed, description, typology, price} = req.body;
-        
+
         // Save the property in the database
         let newProperty = await Property.create(req.body);
 
@@ -516,13 +534,14 @@ exports.create = async (req, res) => {
     catch (err) {
         // If a validation error occurs, return a 400 response with error messages
         if (err instanceof ValidationError)
-            res.status(400).json({ 
-                success: false, 
-                msg: err.errors.map(e => e.message) });
+            res.status(400).json({
+                success: false,
+                msg: err.errors.map(e => e.message)
+            });
         // If an error occurs, return a 500 response with an error message
         else
             res.status(500).json({
-                success: false, 
+                success: false,
                 msg: err.message || "Some error occurred while creating the property."
             });
     };
