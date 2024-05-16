@@ -127,7 +127,53 @@ module.exports = (sequelize, DataTypes) => {
                     msg: "Number of guests must be a non-negative integer"
                 }
             }
-        }
+        },
+        number_stars: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            validate: {
+                notEmpty: {
+                    msg: "Number of stars cannot be empty"
+                },
+                notNull: {
+                    msg: "Number of stars cannot be null"
+                },
+                min: {
+                    args: [1],
+                    msg: "Number of stars must be at least 1"
+                },
+                max: {
+                    args: [5],
+                    msg: "Number of stars cannot exceed 5"
+                }
+            }
+        },
+        comment: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+            validate: {
+                notEmpty: {
+                    msg: "Comment cannot be empty"
+                },
+                notNull: {
+                    msg: "Comment cannot be null"
+                },
+            }
+        },
+        rating_date: {
+            type: DataTypes.DATEONLY,
+            allowNull: false,
+            defaultValue: DataTypes.NOW,
+            validate: {
+                notEmpty: {
+                    msg: "Rating date cannot be empty"
+                },
+                notNull: {
+                    msg: "Rating date cannot be null"
+                },
+                isDate: true,
+            }
+        },
     }, {
         tableName: 'booking', // Specify the table name explicitly
         timestamps: false // Disable automatic creation of `createdAt` and `updatedAt` columns
