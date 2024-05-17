@@ -448,7 +448,7 @@ exports.updateCurrent = async (req, res) => {
 exports.create = async (req, res) => {
     try {
         // Extracts the password property from the request body
-        const { password, email } = req.body;
+        const { password, email, languages } = req.body;
 
         // Validate the password
         // Create a temporary instance of the User model with only the password set
@@ -470,9 +470,28 @@ exports.create = async (req, res) => {
 
         // Add the hashed password to the request body
         req.body.password = hashedPassword;
+
+        // Extract necessary user data from the request body (we don't want the languages array here)
+        const userdata = {
+            name: req.body.name,
+            password: req.body.password,
+            nationality: req.body.nationality,
+            email: req.body.email,
+            vat_number: req.body.vat_number,
+            type: req.body.type
+        }
         
         // Save the user in the database
-        let newUser = await User.create(req.body);
+        let newUser = await User.create(userdata);
+
+        // Extract language_ids from the array of language objects
+        const languageIds = languages.map(language => language.language_id);
+
+        // Associate the extracted language IDs with the newly created user
+        await newUser.addLanguage(languageIds); 
+
+        //const user = await User.findByPk(newUser.user_id);
+        //await user.addLanguage(languageIds); 
 
         // Send OTP verification email to the user
         await sendOTPVerificationEmail(newUser.user_id, email, res);
