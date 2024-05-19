@@ -797,7 +797,7 @@ exports.forgotPassword = async (req, res) => {
             }
         });
 
-        // Save the hashed token to the database, along with user_id and expiration time
+        // Save the token to the database, along with user_id and expiration time
         await db.user_password_token.create({
             user_id: user.user_id,
             token: token,
@@ -817,7 +817,7 @@ exports.forgotPassword = async (req, res) => {
 
         
     } catch (err) {
-        console.log(err);
+        // console.log(err);
         // If an error occurs, return 500 Internal Server Error status with an error message
         res.status(500).json({
             error: err.msg || 'Some error occurred while sending the reset password email.'
@@ -895,7 +895,7 @@ exports.resetPassword = async (req, res) => {
         });
     }
     catch (err) {
-        console.log(err);
+        // console.log(err);
         // If an error occurs, return a 500 response with an error message
         return res.status(500).json({
                 success: false, 
