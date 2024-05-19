@@ -48,6 +48,12 @@ router.route('/resend-email')
 router.route('/login')
     .post( userController.login ) // PUBLIC
 
+router.route('/forgot-password')
+    .post( userController.forgotPassword ) // PUBLIC
+
+router.route('/reset-password/:token')
+    .patch( userController.resetPassword ) // PUBLIC
+
 
 router.all('*', (req, res) => {
     res.status(404).json({ message: 'CozyStay: what???' }); //send a predefined error message
