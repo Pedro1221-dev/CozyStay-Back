@@ -2,6 +2,8 @@
 const fs = require('fs');
 // Importing the bcrypt library
 const bcrypt = require('bcrypt');
+// Importing the crypto library
+const crypto = require('crypto');
 // Importing the jsonwebtoken library
 const jwt = require('jsonwebtoken');
 // Importing the nodemailer library
@@ -344,7 +346,7 @@ exports.update = async (req, res) => {
 
         // If no rows were affected, return a success message indicating no updates were made
         if(affectedRows[0] === 0){
-            return res.status(404).json({
+            return res.status(200).json({
                 success: true, 
                 msg: `No updates were made to user with ID ${req.params.user_id}.`
             });
@@ -743,6 +745,163 @@ exports.login = async (req, res) => {
             error: err.msg || 'Something went wrong. Please try again later'
         });
     }
+};
+
+/**
+ * Handle the forgot password request.
+ * This function sends a password reset email to the user with a unique token.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.forgotPassword = async (req, res) => {
+    try {
+        // Finding the user with the provided email
+        const user = await User.findOne(
+            { 
+                where: { 
+                    email: req.body.email 
+                } 
+            });
+        
+        // If user doesn't exist, return 404 Not Found status with an error message
+        if (!user) {
+            return res.status(404).json({
+                msg: 'The user was not found'
+            });
+        }
+
+        const token = crypto.randomBytes(Math.ceil(128 / 2)).toString('hex').slice(0, 128);
+        
+        // Construct the reset URL
+        const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${token}`
+
+        /// Read the email template from file
+        const emailTemplate = fs.readFileSync('./html/email_forgot_password.html', 'utf8');
+
+        // Replace the placeholder {{resetUrl}} with the actual reset URL in the email template
+        const emailBody = emailTemplate.replace('{{resetUrl}}', resetUrl);  
+
+        // Configure email options
+        const mailOptions = {
+            from: process.env.AUTH_EMAIL,
+            to: req.body.email,
+            subject: "Password Reset Request",
+            html: emailBody
+        };
+
+        // Delete any existing password reset tokens for the user
+        await db.user_password_token.destroy({
+            where: {
+                user_id: user.user_id
+            }
+        });
+
+        // Save the token to the database, along with user_id and expiration time
+        await db.user_password_token.create({
+            user_id: user.user_id,
+            token: token,
+            created_at: new Date(),
+            expires_at: new Date(Date.now() + 3600 * 1000) // 1 hour expiration
+        });
+
+
+        // Send the email using nodemailer transporter
+        await transporter.sendMail(mailOptions);
+
+        // Return a success message
+        res.status(200).json({
+            success: true,
+            msg: "Reset password email sent",
+        });
+
+        
+    } catch (err) {
+        // console.log(err);
+        // If an error occurs, return 500 Internal Server Error status with an error message
+        res.status(500).json({
+            error: err.msg || 'Some error occurred while sending the reset password email.'
+        });
+    }
+};
+
+/**
+ * Resets the password associated with a user account using the provided OTP.
+ * 
+ * @param {Object} req - The request object containing the token in the params and the new password in the body.
+ * @param {Object} res - The response object.
+ */
+exports.resetPassword = async (req, res) => {
+    try {
+        // Extract password and confirmPassword from request body
+        const {password, confirmPassword } = req.body;
+
+        // Find the password token record associated with the user
+        const passwordTokenRecord = await db.user_password_token.findOne({
+            where: {
+                token: req.params.token
+            }
+        });
+
+        // If password token record not found, return an error
+        if (!passwordTokenRecord) {
+            return res.status(400).json({
+                success: false,
+                msg: "Password token record not found or has already been used."
+            });
+        }
+
+        // If password token has expired, delete the password token record and return an error
+        if (passwordTokenRecord.expires_at < new Date()) {
+            await db.user_password_token.destroy({
+                where: {
+                    user_id: passwordTokenRecord.user_id
+                }
+            });
+            return res.status(400).json({
+                success: false,
+                msg: "The password token has expired."
+            });
+        }
+
+        // Check if passwords match
+        if (!(password === confirmPassword)) {
+            return res.status(400).json({
+                msg: 'Passwords do not match'
+            });
+        }
+
+        // Hash the password before saving it to the database
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Update the user's password in the database
+        await db.user.update({password: hashedPassword}, {
+            where: {
+                user_id: passwordTokenRecord.user_id
+            }
+        });
+
+        // Delete the password token record from the database
+        await db.user_password_token.destroy({
+            where: {
+                user_id: passwordTokenRecord.user_id
+            }
+        });
+
+        // Return a success message
+        res.status(200).json({
+            success: true,
+            msg: "Password sucessfully reset",
+        });
+    }
+    catch (err) {
+        // console.log(err);
+        // If an error occurs, return a 500 response with an error message
+        return res.status(500).json({
+                success: false, 
+                msg: err.message || "Some error occurred while reseting the password."
+            });
+    };
 };
 
 /**

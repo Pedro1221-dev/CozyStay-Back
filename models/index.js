@@ -45,6 +45,8 @@ db.seasonPrice = require("./seasonPrice.model.js")(sequelize, DataTypes);
 db.facility = require("./facility.model.js")(sequelize, DataTypes);
 //export user_otp model
 db.user_otp = require("./userOTP.model.js")(sequelize, DataTypes);
+//export user_password_token model
+db.user_password_token = require("./userPasswordToken.model.js")(sequelize, DataTypes);
 
 
 // 1:N - 1 user, N bookings
@@ -81,6 +83,16 @@ db.user.hasMany(db.user_otp, {
     onDelete: "CASCADE"
 });
 db.user_otp.belongsTo(db.user, {
+    foreignKey: 'user_id',
+});
+
+// 1:N - 1 user, N user_password_token
+// if user is deleted, delete all the reset password token associated with it
+db.user.hasMany(db.user_password_token, {
+    foreignKey: 'user_id',
+    onDelete: "CASCADE"
+});
+db.user_password_token.belongsTo(db.user, {
     foreignKey: 'user_id',
 });
 
