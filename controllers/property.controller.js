@@ -41,7 +41,7 @@ exports.findAll = async (req, res) => {
 
         // Pagination information
         // Set the limit per page, defaulting to 10 if not specified in the query parameters
-        const limit = queryLimit ? parseInt(queryLimit) : 10;
+        const limit = queryLimit ? parseInt(queryLimit) : 24;
         // Determine the current page, defaulting to 1 if not specified in the query parameters
         const currentPage = queryPage ? parseInt(queryPage) : 1;
         // Calculate the offset for pagination, which determines the starting index of the properties to be fetched for the current page
