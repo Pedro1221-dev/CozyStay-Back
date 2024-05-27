@@ -1251,9 +1251,30 @@ exports.findFavoritePropertiesCurrent = async (req, res) => {
 exports.addFavorite = async (req, res) => {
     try {
         // Find the user by their ID
-        const user = await User.findByPk(req.userData.user_id);
+        const user = await User.findByPk(req.userData.user_id, 
+            {
+                include: [
+                    {
+                        model: db.property,
+                        as: 'favoriteProperty'  // Include the user's favorite properties
+                    }
+                ]
+            }
+        );
+
         // Find the property by its ID
         const property = await Property.findByPk(req.body.property_id);
+
+        // Check if the property is already in the user's favorites
+        const propertyAlreadyFavorited = user.favoriteProperty.some(property => property.property_id === req.body.property_id);
+
+        if (propertyAlreadyFavorited) {
+            // If the property is already in the favorite list, return a 404 response
+            return res.status(400).json({ 
+                success: false, 
+                msg: `Property with ID ${req.body.property_id} is already in favorites.` 
+            });
+        }
 
         // Check if the property exists
         if (!property) {
@@ -1262,6 +1283,31 @@ exports.addFavorite = async (req, res) => {
                 success: false, 
                 msg: `Property with ID ${req.body.property_id} not found.` });
         }
+
+        // Count the number of favorite properties of the user
+        const favoritePropertiesCount = user.favoriteProperty.length + 1;
+        //console.log(favoritePropertiesCount);
+
+        // Define badge IDs
+        const favoriteFinderBadge = 7;           // Badge when user adds 1st property to the favorites
+        const favoriteCollectorBadge = 8;        // Badge when user adds 3rd property to the favorites
+        const favoriteConnoisseurBadge = 9;      // Badge when user adds 5ft property to the favorites
+
+        // Check the favorite properties count and update badges accordingly
+        if (favoritePropertiesCount === 1) {
+            // Add the finder badge
+            await user.addBadge(favoriteFinderBadge);
+        } else if (favoritePropertiesCount === 3) {
+            // Remove the finder badge
+            await user.removeBadge(favoriteFinderBadge);
+            // Add the collector badge
+            await user.addBadge(favoriteCollectorBadge);
+        } else if (favoritePropertiesCount  === 5) {
+            // Remove the collector badge
+            await user.removeBadge(favoriteCollectorBadge);
+            // Add the connoisseur badge
+            await user.addBadge(favoriteConnoisseurBadge);
+        } 
 
         // Add the property to the user's favorite properties (Magic Method from the N:N relation)
         await user.addFavoriteProperty(property);
