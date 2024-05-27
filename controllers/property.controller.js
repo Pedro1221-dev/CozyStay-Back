@@ -40,7 +40,7 @@ exports.findAll = async (req, res) => {
         } = req.query;
 
         // Pagination information
-        // Set the limit per page, defaulting to 10 if not specified in the query parameters
+        // Set the limit per page, defaulting to 24 if not specified in the query parameters
         const limit = queryLimit ? parseInt(queryLimit) : 24;
         // Determine the current page, defaulting to 1 if not specified in the query parameters
         const currentPage = queryPage ? parseInt(queryPage) : 1;
