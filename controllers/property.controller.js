@@ -522,6 +522,43 @@ exports.create = async (req, res) => {
         // Extracts the properties from the request body
         // const { owner_id, title, city, country, address, number_bedrooms, number_beds, number_bathrooms, number_guests_allowed, description, typology, price} = req.body;
 
+        // Count the number of properties the user owns
+        const propertyCount = await Property.count({
+            where: {
+                owner_id: req.body.owner_id
+            }
+        });
+
+        // Find the user by ID provided in the request body
+        let user = await db.user.findByPk(req.body.owner_id);
+
+        // Define badge IDs
+        const propertyDebutBadge = 1;        // Badge when user register 1st property
+        const propertyPortfolioBadge = 2;    // Badge when user register 3rd property
+        const propertyMagnateBadge = 3;      // Badge when user register 5th property
+
+        // Check the property count and update badges accordingly
+        if (propertyCount === 0) {
+            // Set host_since to the current date
+            user.host_since = new Date();
+            // Save the changes to the database
+            await user.save();
+            // Add the debut badge
+            await user.addBadge(propertyDebutBadge);
+        } else if (propertyCount === 2) {
+            // Remove the debut badge
+            await user.removeBadge(propertyDebutBadge);
+            // Add the portfolio badge
+            await user.addBadge(propertyPortfolioBadge);
+        } else if (propertyCount === 4) {
+            // Remove the portfolio badge
+            await user.removeBadge(propertyPortfolioBadge);
+            // Add the magnate badge
+            await user.addBadge(propertyMagnateBadge);
+        }
+
+        //console.log(propertyCount);
+
         // Save the property in the database
         let newProperty = await Property.create(req.body);
 
