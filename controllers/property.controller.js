@@ -307,6 +307,11 @@ exports.findOne = async (req, res) => {
                     model: db.booking,
                     as: 'rating',
                     attributes: ["number_stars", "comment", "rating_date"],
+                    where: {
+                        number_stars: {
+                            [Sequelize.Op.not]: null
+                        }
+                    },
                     include: [
                         { 
                             model: db.user,
