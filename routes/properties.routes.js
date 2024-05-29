@@ -5,17 +5,20 @@ const router = express.Router();
 // Importing middleware functions
 const checkAuth = require('../middleware/check-auth');
 
+// Importing multer 
+const upload = require('../config/multerConfig'); 
+
 // import property controller middleware
 const propertyController = require("../controllers/property.controller");
 
 router.route('/')
     .get( propertyController.findAll ) // PUBLIC
-    .post ( checkAuth, propertyController.create ) // PROTECTED (user logged in)
+    .post ( checkAuth, upload.array('photos', { minCount: 1, maxCount: 5 }), propertyController.create ) // PROTECTED (user logged in)
 
 router.route('/:property_id')
     .get( propertyController.findOne )  // PUBLIC
-    .patch( propertyController.update ) // PROTECTED
-    .delete( propertyController.delete) // PROTECTED
+    .patch( checkAuth, propertyController.update ) // PROTECTED (user logged in)
+    .delete( checkAuth, propertyController.delete) // PROTECTED (user logged in)
 
 router.route('/:property_id/confirm')
     //.patch( propertiesController.xxx ) // PROTECTED
