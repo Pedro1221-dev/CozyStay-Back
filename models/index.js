@@ -74,7 +74,9 @@ db.property.hasMany(db.photo, {
     as: 'photos',
     onDelete: "CASCADE"
 });
-db.photo.belongsTo(db.property);
+db.photo.belongsTo(db.property,{
+    foreignKey: 'property_id'
+});
 
 // 1:N - 1 user, N otp_codes
 // if user is deleted, delete all the otp associated with it
