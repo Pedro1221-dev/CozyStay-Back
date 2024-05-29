@@ -29,7 +29,11 @@ module.exports = (sequelize, DataTypes) => {
                     msg: "Url of photo must have a url format (https://foo.com)"
                 }
             }
-        }
+        },
+        cloudinary_photo_id: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
     }, {
         tableName: 'photo', // Specify the table name explicitly
         timestamps: false // Disable automatic creation of `createdAt` and `updatedAt` columns
