@@ -2,6 +2,10 @@
 const express = require('express');
 // Creating an instance of the express router
 const router = express.Router();
+
+// Importing multer 
+const upload = require('../config/multerConfig'); 
+
 // Importing middleware functions
 const checkAuth = require('../middleware/check-auth');
 const checkCurrent = require('../middleware/check-current');
@@ -16,7 +20,7 @@ router.route('/')
 
 router.route('/current')
     .get( checkAuth, userController.findOneCurrent )  // PROTECTED (user logged in)
-    .patch( checkAuth, userController.updateCurrent ) // PROTECTED (user logged in)
+    .patch( checkAuth, upload.fields([{ name: 'url_avatar', maxCount: 1 }, { name: 'url_banner', maxCount: 1 }]), userController.updateCurrent ) // PROTECTED (user logged in)
 
 router.route('/current/properties')
     .get( checkAuth, userController.findPropertiesCurrent ) // PROTECTED (user logged in)
