@@ -127,6 +127,16 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: false,  
             allowNull: false,
         },
+        url_banner: {
+            type: DataTypes.STRING, // varchar(255)
+            allowNull: true, 
+            defaultValue: 'https://res.cloudinary.com/dc8ckrwlq/image/upload/v1716975931/banner/nature.webp', 
+            validate: {
+              isURL: {
+                msg: "Invalid avatar URL"
+              }
+            }
+        },
     }, {
         tableName: 'user', // Specify the table name explicitly
         timestamps: false // Disable automatic creation of `createdAt` and `updatedAt` columns
