@@ -112,6 +112,10 @@ module.exports = (sequelize, DataTypes) => {
               }
             }
         },
+        cloudinary_avatar_id: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
         host_since: {
             type: DataTypes.DATEONLY,
             allowNull: true, 
@@ -136,6 +140,10 @@ module.exports = (sequelize, DataTypes) => {
                 msg: "Invalid avatar URL"
               }
             }
+        },
+        cloudinary_banner_id: {
+            type: DataTypes.STRING,
+            allowNull: true
         },
     }, {
         tableName: 'user', // Specify the table name explicitly
