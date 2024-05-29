@@ -22,6 +22,10 @@ const Booking = db.booking;
 const Favorite = db.favorite;
 const UserOTP = db.user_otp;
 
+// Importing the uploadImage and destroy functions from the cloudinary middleware
+const { uploadImage, deleteImage }  = require('../middleware/cloudinary');
+
+
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
 
@@ -287,6 +291,19 @@ exports.delete = async (req, res) => {
                 msg: "Unauthorized: You don't have permission to perform this action." });
         }
 
+        // Find the user by their ID
+        let user = await User.findByPk(req.params.user_id)
+
+        // Check if the user has an avatar image associated and delete it from Cloudinary if it exists
+        if (user.url_avatar && user.cloudinary_avatar_id) {
+            await deleteImage(user.cloudinary_avatar_id);
+        }
+
+        // Check if the user has a banner image associated and delete it from Cloudinary if it exists
+        if (user.url_banner && user.cloudinary_banner_id) {
+            await deleteImage(user.cloudinary_banner_id);
+        }
+
         // Attempt to delete the user with the specified ID
         let result = await User.destroy({ 
             where: { user_id: req.params.user_id}
@@ -400,6 +417,47 @@ exports.updateCurrent = async (req, res) => {
             return res.status(403).json({
                 success: false, msg: `You are not authorized to change the user type.`
             });
+        }
+        
+        // If there are files attached to the request, process them
+        if (req.files) {
+            try {
+                // Process avatar file if provided
+                if (req.files.url_avatar) {
+                    // Upload new avatar image in the user folder
+                    const avatarResult = await uploadImage(req.files.url_avatar[0], "user");
+
+                    // Delete old avatar image if it exists
+                    if (user.url_avatar && user.cloudinary_avatar_id) {
+                        await deleteImage(user.cloudinary_avatar_id);
+                    }
+
+                    // Update user data with new avatar image details
+                    req.body.url_avatar = avatarResult.secure_url;
+                    req.body.cloudinary_avatar_id = avatarResult.public_id;
+                }
+
+                // Process banner file if provided
+                if (req.files.url_banner) {
+                    // Upload new banner image in the banner folder
+                    const bannerResult = await uploadImage(req.files.url_banner[0], "banner");
+
+                    // Delete old banner image if it exists
+                    if (user.url_banner && user.cloudinary_banner_id) {
+                        await deleteImage(user.cloudinary_banner_id);
+                    }
+
+                    // Update user data with new banner image details
+                    req.body.url_banner = bannerResult.secure_url;
+                    req.body.cloudinary_banner_id = bannerResult.public_id;
+                }
+            } catch (uploadError) {
+                // Handle upload errors
+                return res.status(500).json({
+                    success: false,
+                    msg: "Error uploading image: " + uploadError.message
+                });
+            }
         }
 
         // Attempt to update the user with the provided data
