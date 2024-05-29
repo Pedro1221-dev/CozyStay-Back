@@ -105,7 +105,7 @@ module.exports = (sequelize, DataTypes) => {
         url_avatar: {
             type: DataTypes.STRING, // varchar(255)
             allowNull: true, 
-            defaultValue: 'https://example.com/default_avatar.jpg', 
+            defaultValue: 'https://res.cloudinary.com/dc8ckrwlq/image/upload/v1716976243/user/default_avatar_jsb7v1.png', 
             validate: {
               isURL: {
                 msg: "Invalid avatar URL"
