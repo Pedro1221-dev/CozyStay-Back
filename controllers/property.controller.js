@@ -37,6 +37,7 @@ exports.findAll = async (req, res) => {
             number_beds,
             number_bathrooms,
             typology,
+            status,
             sort,
             direction,
         } = req.query;
@@ -128,6 +129,13 @@ exports.findAll = async (req, res) => {
             };
         }
 
+        if (status) {
+            searchOptions.where = {
+                ...searchOptions.where,
+                status: status ? status : 'available'
+            };
+        }
+
         // Add 'sort' query parameter to search options if provided
         if (sort) {
             // Verifies if direction was specified, if it wasn't, use default one 'ASC'
@@ -146,10 +154,10 @@ exports.findAll = async (req, res) => {
         }
 
         // Merge the existing 'where' conditions with the status atribute (return only available properties)
-        searchOptions.where = {
+        /* searchOptions.where = {
             ...searchOptions.where,
             status: 'available'
-        };
+        }; */
 
         // Find properties with pagination and search options
         const properties = await Property.findAll({
