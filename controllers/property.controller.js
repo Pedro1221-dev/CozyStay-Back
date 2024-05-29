@@ -438,11 +438,28 @@ exports.delete = async (req, res) => {
         // Retrieve the user information from the token in the header
         const loggedInUser = req.userData; 
 
-        // Check if the logged-in user is an admin or if someone is attempting to delete their own account
-        if (loggedInUser.type !== 'admin' && loggedInUser.user_id !== parseInt(req.params.user_id)) {
+        const property = await Property.findByPk(req.params.property_id);
+        
+
+        // Check if the logged-in user is an admin or if they own the property
+        if (loggedInUser.type !== 'admin' && loggedInUser.user_id !== property.owner_id) {
             return res.status(403).json({ 
                 success: false, 
                 msg: "Unauthorized: You don't have permission to perform this action." });
+        }
+
+        // Find all photos associated with the property ID
+        let photos = await db.photo.findAll({
+            where: {
+                property_id: req.params.property_id
+            }
+        });
+
+        // Delete all the photos from Cloudinary
+        if (photos && photos.length > 0) {
+            for (let photo of photos) {
+                await deleteImage(photo.cloudinary_photo_id);
+            }
         }
 
         // Attempt to delete the property with the specified ID
@@ -492,6 +509,14 @@ exports.update = async (req, res) => {
             });
         }
 
+        // Find all photos associated with the property ID
+        let photos = await db.photo.findAll({
+            where: {
+                property_id: req.params.property_id
+            }
+        });
+        
+
         // Attempt to update the property with the provided data
         let affectedRows = await Property.update(
             req.body, {
@@ -499,6 +524,50 @@ exports.update = async (req, res) => {
                 property_id: req.params.property_id
             }
         });
+
+        // If there are files attached to the request, process them
+        if (req.files) {
+            try {
+                // Delete old photo if it exists
+                if (photos && photos.length > 0) {
+                    for (let photo of photos) {
+                        // Delete the photo from the database
+                        await db.photo.destroy({
+                            where: { photo_id: photo.photo_id } 
+                        });
+        
+                        // Delete the photo from Cloudinary
+                        await deleteImage(photo.cloudinary_photo_id);
+                    }
+                }
+
+                const promises = req.files.map(async (photoFile) => {
+                    // Upload each photo image
+                    const photoResult = await uploadImage(photoFile, "properties");
+
+                    // Create a new photo record in the database
+                    const newPhoto = await db.photo.create({
+                        property_id: req.params.property_id, 
+                        url_photo: photoResult.secure_url,
+                        cloudinary_photo_id: photoResult.public_id
+                    });
+
+                    
+                    // Increment the affectedRows count
+                    affectedRows ++
+                });
+        
+                // Wait for all photo upload operations to complete
+                await Promise.all(promises);
+
+            } catch (uploadError) {
+                // Handle upload errors
+                return res.status(500).json({
+                    success: false,
+                    msg: "Error uploading image: " + uploadError.message
+                });
+            }
+        }
 
         // If no rows were affected, return a success message indicating no updates were made
         if (affectedRows[0] === 0) {
@@ -581,16 +650,27 @@ exports.create = async (req, res) => {
 
         // Process and upload photos if provided
         if (req.files) {
-            const promises = req.files.map(async (photoFile) => {
-                const photoResult = await uploadImage(photoFile, "properties");
-                await db.photo.create({
-                    property_id: newProperty.property_id,
-                    url_photo: photoResult.secure_url,
-                    cloudinary_photo_id: photoResult.public_id
+            try {
+                const promises = req.files.map(async (photoFile) => {
+                    const photoResult = await uploadImage(photoFile, "properties");
+                    await db.photo.create({
+                        property_id: newProperty.property_id,
+                        url_photo: photoResult.secure_url,
+                        cloudinary_photo_id: photoResult.public_id
+                    });
                 });
-            });
-            await Promise.all(promises);
+                await Promise.all(promises);
+            } catch (error) {
+                // Handle any error that might occur during file upload or database creation
+                console.error("Error uploading photos:", error);
+                // Return an error response to the client
+                return res.status(500).json({
+                    success: false,
+                    msg: "An error occurred while uploading photos."
+                });
+            }
         }
+        
 
         // Return a sucess message,along with links for actions (HATEOAS)
         res.status(201).json({
