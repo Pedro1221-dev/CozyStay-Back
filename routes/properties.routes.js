@@ -17,7 +17,7 @@ router.route('/')
 
 router.route('/:property_id')
     .get( propertyController.findOne )  // PUBLIC
-    .patch( checkAuth, propertyController.update ) // PROTECTED (user logged in)
+    .patch( checkAuth, upload.array('photos', { minCount: 1, maxCount: 5 }), propertyController.update ) // PROTECTED (user logged in)
     .delete( checkAuth, propertyController.delete) // PROTECTED (user logged in)
 
 router.route('/:property_id/confirm')
