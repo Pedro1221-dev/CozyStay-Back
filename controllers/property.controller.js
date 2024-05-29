@@ -9,6 +9,8 @@ const Property = db.property;
 // Define a variable Photo to represent the User model in the database
 //const Photo = db.photo;
 
+// Importing the uploadImage and destroy functions from the cloudinary middleware
+const { uploadImage, deleteImage }  = require('../middleware/cloudinary');
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError, Sequelize, where } = require('sequelize');
@@ -423,18 +425,30 @@ exports.findOne = async (req, res) => {
 };
 
 /**
- * Deletes a property by their ID.
+ * Deletes a property by their ID. This endpoint serves two purposes:
+ * 
+ * 1. Allows an administrator to delete any property by providing its ID.
+ * 2. Allows a property owner to delete their own property by providing its ID.
  * 
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
 */
 exports.delete = async (req, res) => {
     try {
+        // Retrieve the user information from the token in the header
+        const loggedInUser = req.userData; 
+
+        // Check if the logged-in user is an admin or if someone is attempting to delete their own account
+        if (loggedInUser.type !== 'admin' && loggedInUser.user_id !== parseInt(req.params.user_id)) {
+            return res.status(403).json({ 
+                success: false, 
+                msg: "Unauthorized: You don't have permission to perform this action." });
+        }
+
         // Attempt to delete the property with the specified ID
         let result = await Property.destroy({
             where: { property_id: req.params.property_id }
         });
-
 
         // Check if the property was successfully deleted
         if (result == 1) {
@@ -562,10 +576,21 @@ exports.create = async (req, res) => {
             await user.addBadge(propertyMagnateBadge);
         }
 
-        //console.log(propertyCount);
-
         // Save the property in the database
         let newProperty = await Property.create(req.body);
+
+        // Process and upload photos if provided
+        if (req.files) {
+            const promises = req.files.map(async (photoFile) => {
+                const photoResult = await uploadImage(photoFile, "properties");
+                await db.photo.create({
+                    property_id: newProperty.property_id,
+                    url_photo: photoResult.secure_url,
+                    cloudinary_photo_id: photoResult.public_id
+                });
+            });
+            await Promise.all(promises);
+        }
 
         // Return a sucess message,along with links for actions (HATEOAS)
         res.status(201).json({
