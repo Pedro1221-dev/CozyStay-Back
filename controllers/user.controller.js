@@ -22,8 +22,8 @@ const Booking = db.booking;
 const Favorite = db.favorite;
 const UserOTP = db.user_otp;
 
-// Importing the uploadImage and destroy functions from the cloudinary middleware
-const { uploadImage, deleteImage }  = require('../middleware/cloudinary');
+// Importing the uploadImage and destroy functions from the cloudinary utilities
+const { uploadImage, deleteImage }  = require('../utilities/cloudinary');
 
 
 //"Op" necessary for LIKE operator

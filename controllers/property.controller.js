@@ -9,8 +9,8 @@ const Property = db.property;
 // Define a variable Photo to represent the User model in the database
 //const Photo = db.photo;
 
-// Importing the uploadImage and destroy functions from the cloudinary middleware
-const { uploadImage, deleteImage }  = require('../middleware/cloudinary');
+// Importing the uploadImage and destroy functions from the cloudinary utilities
+const { uploadImage, deleteImage }  = require('../utilities/cloudinary');
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError, Sequelize, where } = require('sequelize');
