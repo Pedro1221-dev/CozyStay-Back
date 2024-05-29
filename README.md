@@ -60,12 +60,6 @@ npm install jsonwebtoken
 npm install nodemailer
 ```
 
-### crypto
-
-```sh
-npm install crypto
-```
-
 ### cloudinary
 
 ```sh
@@ -81,5 +75,5 @@ npm install multer
 # Bulk Package Installation
 
 ```sh
-npm install cors dotenv express sequelize mysql2 bcrypt jsonwebtoken nodemailer crypto cloudinary multer
+npm install cors dotenv express sequelize mysql2 bcrypt jsonwebtoken nodemailer cloudinary multer
 ```
