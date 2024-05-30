@@ -448,6 +448,22 @@ exports.delete = async (req, res) => {
         const loggedInUser = req.userData; 
 
         const property = await Property.findByPk(req.params.property_id);
+
+        // Check for pending bookings associated with the property
+        const pendingBookings = await db.booking.findOne({
+            where: {
+                property_id: req.params.property_id,
+                check_out_date: { [Op.gt]: new Date() } 
+            }
+        });
+
+        if (pendingBookings) {
+            // If there are pending bookings, return an error indicating that the property cannot be deleted
+            return res.status(400).json({
+                success: false,
+                message: 'Unable to delete the property because there are pending bookings associated with it.'
+            });
+        }
         
 
         // Check if the logged-in user is an admin or if they own the property
