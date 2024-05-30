@@ -37,10 +37,6 @@ module.exports = (sequelize, DataTypes) => {
                 notNull: {
                     msg: "City cannot be null"
                 },
-                isAlpha: {
-                    args: true,
-                    msg: "City must contain only alphabetic characters"
-                }
             }
         },
         country: {
