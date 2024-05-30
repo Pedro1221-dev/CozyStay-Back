@@ -857,4 +857,53 @@ exports.create = async (req, res) => {
     };
 };
 
+/**
+ * Confirms a property register request.
+ * Only available for administrators
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.confirm = async (req, res) => {
+    try {
+        // Find the property by ID
+        const property = await db.property.findByPk(req.params.property_id);
+
+        // If property is not found, return a 404 error response
+        if (!property) {
+            return res.status(404).json({
+                success: false,
+                msg: `Property with ID ${req.params.property_id} not found.`
+            });
+        }
+
+        // If property status is already 'available', return a 404 error response
+        if (property.status === 'available') {
+            return res.status(404).json({
+                success: false,
+                msg: "Property request already confirmed" 
+            });
+        }
+
+        // Update property status to 'available'
+        await property.update({
+            status: 'available'
+        })
+
+        // Return a success message, along with the confirmed property details
+        res.status(201).json({
+            success: true,
+            msg: "Property request confirmed", property,
+            
+        });
+    }
+    catch (err) {
+        // If an error occurs, return a 500 response with an error message
+        res.status(500).json({
+            success: false,
+            msg: err.message || "Some error occurred while confirming the property."
+        });
+    };
+};
+
 
