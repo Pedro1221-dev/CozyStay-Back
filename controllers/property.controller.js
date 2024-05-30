@@ -329,7 +329,7 @@ exports.findOne = async (req, res) => {
             ]
         });
 
-        console.log(property);
+        //console.log(property);
 
         // If the property is not found, return a 404 response
         if (!property) {

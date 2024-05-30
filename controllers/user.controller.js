@@ -1254,7 +1254,7 @@ exports.findPropertiesCurrent = async (req, res) => {
 
     }
     catch (err) {
-        console.log(err);
+        //console.log(err);
         // If an error occurs, return a 500 response with an error message
         return res.status(500).json({ 
             success: false, 
