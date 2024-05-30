@@ -294,8 +294,31 @@ exports.findAll = async (req, res) => {
  */
 exports.findOne = async (req, res) => {
     try {
+        // Initialize search options object
+        const searchOptions = {};
+        
+        // Extract sort and direction parameters from the request query
+        const { sort, direction } = req.query;
+
+        // Add 'sort' query parameter to search options if provided (order by date)
+        if (sort === 'date') {
+            // Verifies if direction was specified, if it wasn't, use default one 'ASC'
+            const selectedDirection = direction ? direction.toUpperCase() : 'ASC';
+
+            searchOptions.order = [[{ model: db.booking, as: 'rating' }, 'rating_date', selectedDirection]];
+        }
+
+        // Add 'sort' query parameter to search options if provided (order by rating)
+        if (sort === 'rate') {
+            // Verifies if direction was specified, if it wasn't, use default one 'ASC'
+            const selectedDirection = direction ? direction.toUpperCase() : 'ASC';
+
+            searchOptions.order = [[{ model: db.booking, as: 'rating' }, 'number_stars', selectedDirection]];
+        }
+
         // Find the property by their ID
         let property = await Property.findByPk(req.params.property_id, {
+            ...searchOptions,
             include: [
                 {
                     model: db.paymentMethod,
@@ -323,7 +346,7 @@ exports.findOne = async (req, res) => {
                             model: db.user,
                             attributes: ["user_id", "name", "url_avatar", "nationality"],
                         }
-                    ]
+                    ],
                 },
                 {
                     model: db.seasonPrice,
@@ -332,7 +355,7 @@ exports.findOne = async (req, res) => {
             ]
         });
 
-        //console.log(property);
+        //console.log(property.rating);
 
         // If the property is not found, return a 404 response
         if (!property) {
