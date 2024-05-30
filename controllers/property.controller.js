@@ -38,6 +38,11 @@ exports.findAll = async (req, res) => {
             number_bathrooms,
             typology,
             status,
+            check_in_date,
+            check_out_date,
+            host_language,
+            amenities,
+            average_rating,
             sort,
             direction,
         } = req.query;
@@ -137,13 +142,79 @@ exports.findAll = async (req, res) => {
             };
         }
 
+        // Add 'host_language' query parameter to search options if provided
+       /*  if (host_language) {
+            const selectedHostLanguages = host_language.split(',').map(lang => lang.trim());
+            searchOptions.include = [{
+                model: db.language,
+                where: {
+                    language: selectedHostLanguages
+                },
+            }];
+        } */
+
+        // Add 'amenities' query parameter to search options if provided
+       /*  if (amenities) {
+            const selectedAmenities = amenities.split(',').map(lang => lang.trim());
+            searchOptions.include = [{
+                model: db.facility,
+                where: {
+                    facility: selectedAmenities
+                },
+            }];
+        } */
+
+        // Initializing variables to store minimum price and maximum price
+        /* let minAverageRating, maxAverageRating;
+        if (average_rating) {
+            // Split the price parameter into minPrice and maxPrice based on a delimiter ('-')
+            const averageRatingRange = average_rating.split('-').map(val => parseInt(val.trim()));
+            // If both minPrice and maxPrice are provided
+            if (averageRatingRange.length === 2) {
+                minAverageRating = averageRatingRange[0];
+                maxAverageRating = averageRatingRange[1];
+            } else if (averageRatingRange.length === 1) {
+                // If only one value is provided, consider it as maxPrice and set minPrice as undefined
+                minAverageRating = undefined;
+                maxAverageRating = averageRatingRange[1];
+            }
+        }
+
+        // Use minPrice and maxPrice to construct the price range condition and then merging it with the existing 'where' conditions
+        if (minAverageRating || maxAverageRating) {
+            let averageRatingCondition = {};
+
+            if (minAverageRating) {
+                averageRatingCondition[Op.gte] = minAverageRating; // Greater than or equal to minPrice
+            }
+
+            if (maxAverageRating) {
+                averageRatingCondition[Op.lte] = maxAverageRating; // Less than or equal to maxPrice
+            }
+
+            // Merge the existing 'where' conditions with the new 'price' range condition
+            searchOptions.where = {
+                ...searchOptions.where,
+                averageRating: averageRatingCondition
+            };
+        } */
+        
+
         // Add 'sort' query parameter to search options if provided
-        if (sort) {
+        if (sort === 'date') {
             // Verifies if direction was specified, if it wasn't, use default one 'ASC'
             const selectedDirection = direction ? direction.toUpperCase() : 'ASC';
 
             searchOptions.order = [['property_id', selectedDirection]];
         }
+
+        // Add 'sort' query parameter to search options if provided (order by rating)
+        /* if (sort === 'rate') {
+            // Verifies if direction was specified, if it wasn't, use default one 'ASC'
+            const selectedDirection = direction ? direction.toUpperCase() : 'ASC';
+
+            searchOptions.order = [['property.averageRating', selectedDirection]];
+        } */
 
         // Validate query parameters
         if (isNaN(limit) || limit <= 5) {
@@ -173,9 +244,9 @@ exports.findAll = async (req, res) => {
                     attributes: ["url_photo"],
                 },
                 {
-                    model: db.booking, // Assuming 'rating' is a Booking model
-                    as: 'rating', // Assuming 'rating' is the alias for the association
-                    attributes: ["number_stars"], // Assuming 'number_stars' is the attribute for the rating
+                    model: db.booking, 
+                    as: 'rating', 
+                    attributes: ["number_stars"], 
                 },
             ],
         });
@@ -277,6 +348,7 @@ exports.findAll = async (req, res) => {
             ]
         });
     } catch (err) {
+        console.log(err);
         // If an error occurs, respond with an error status code and message
         res.status(500).json({
             success: false,
