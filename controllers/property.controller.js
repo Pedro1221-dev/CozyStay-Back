@@ -128,7 +128,8 @@ exports.findAll = async (req, res) => {
                 typology: selectedTypologies
             };
         }
-
+        
+        // Add 'status' query parameter to search options if provided
         if (status) {
             searchOptions.where = {
                 ...searchOptions.where,
