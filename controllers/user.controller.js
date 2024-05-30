@@ -226,7 +226,7 @@ exports.findOne = async (req, res) => {
                 {
                     model: db.badge,
                     as: 'badge',
-                    attributes: ["title", "description"],
+                    attributes: ["title", "description", "url_badge"],
                     through: { attributes: ["badge_id"] } // Specifing atributes from the user_badge table
                 }, 
                 {
@@ -974,6 +974,7 @@ exports.findOneCurrent = async (req, res) => {
         const userId = req.userData.user_id;
 
         let user = await User.findByPk(userId, {
+            attributes: { exclude: ['password'] }, // Exclude the password attribute
             include: [
                 {
                     model: db.language,
@@ -984,7 +985,7 @@ exports.findOneCurrent = async (req, res) => {
                 {
                     model: db.badge,
                     as: 'badge',
-                    attributes: ["title", "description"],
+                    attributes: ["title", "description", "url_badge"],
                     through: { attributes: ["badge_id"] } // Specifing atributes from the user_badge table
                 }, 
                 {
@@ -995,6 +996,27 @@ exports.findOneCurrent = async (req, res) => {
                 }, 
             ]
         });
+
+        // Check if the user has properties registered
+        const propertiesCount = await db.property.count({ where: { owner_id: userId } });
+
+        // Check if the user has bookings made
+        const bookingsCount = await db.booking.count({ where: { guest_id: userId } });
+
+        // Determine the user status based on properties and bookings
+        let userType;
+        if (propertiesCount > 0 && bookingsCount > 0) {
+            userType = 'Owner/Guest';
+        } else if (propertiesCount > 0) {
+            userType = 'Owner';
+        } else if (bookingsCount > 0) {
+            userType = 'Guest';
+        } else {
+            userType = 'User';
+        }
+
+        // Add the user type to the user object
+        user.dataValues.userType = userType;
 
         // If the user is not found, return a 404 response
         if (!user) {
@@ -1055,11 +1077,13 @@ exports.findProperties = async (req, res) => {
                 }, 
                 {
                     model: db.photo,
+                    as: 'photos',
                     attributes: ["url_photo"],
                     //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
                 },
                 {
-                    model: db.rating,
+                    model: db.booking,
+                    as: 'rating',
                     attributes: [
                         "number_stars", 
                         "comment", 
@@ -1138,11 +1162,13 @@ exports.findPropertiesCurrent = async (req, res) => {
                 }, 
                 {
                     model: db.photo,
+                    as: 'photos',
                     attributes: ["url_photo"],
                     //through: { attributes: ["facility_id"] } // Specifing atributes from the property_facility table
                 },
                 {
-                    model: db.rating,
+                    model: db.booking,
+                    as: 'rating',
                     attributes: [
                         "number_stars", 
                         "comment", 
@@ -1183,6 +1209,7 @@ exports.findPropertiesCurrent = async (req, res) => {
 
     }
     catch (err) {
+        console.log(err);
         // If an error occurs, return a 500 response with an error message
         return res.status(500).json({ 
             success: false, 
