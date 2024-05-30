@@ -130,13 +130,9 @@ module.exports = (sequelize, DataTypes) => {
         },
         number_stars: {
             type: DataTypes.INTEGER,
-            allowNull: false,
             validate: {
                 notEmpty: {
                     msg: "Number of stars cannot be empty"
-                },
-                notNull: {
-                    msg: "Number of stars cannot be null"
                 },
                 min: {
                     args: [1],
@@ -150,26 +146,18 @@ module.exports = (sequelize, DataTypes) => {
         },
         comment: {
             type: DataTypes.TEXT,
-            allowNull: false,
             validate: {
                 notEmpty: {
                     msg: "Comment cannot be empty"
-                },
-                notNull: {
-                    msg: "Comment cannot be null"
                 },
             }
         },
         rating_date: {
             type: DataTypes.DATEONLY,
-            allowNull: false,
             defaultValue: DataTypes.NOW,
             validate: {
                 notEmpty: {
                     msg: "Rating date cannot be empty"
-                },
-                notNull: {
-                    msg: "Rating date cannot be null"
                 },
                 isDate: true,
             }
