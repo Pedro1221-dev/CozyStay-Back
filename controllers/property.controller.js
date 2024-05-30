@@ -324,8 +324,11 @@ exports.findOne = async (req, res) => {
                             attributes: ["user_id", "name", "url_avatar", "nationality"],
                         }
                     ]
-
                 },
+                {
+                    model: db.seasonPrice,
+                    as: 'seasonPrice',
+                }
             ]
         });
 
