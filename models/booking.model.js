@@ -154,7 +154,6 @@ module.exports = (sequelize, DataTypes) => {
         },
         rating_date: {
             type: DataTypes.DATEONLY,
-            defaultValue: DataTypes.NOW,
             validate: {
                 notEmpty: {
                     msg: "Rating date cannot be empty"
