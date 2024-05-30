@@ -48,6 +48,13 @@ db.user_otp = require("./userOTP.model.js")(sequelize, DataTypes);
 //export user_password_token model
 db.user_password_token = require("./userPasswordToken.model.js")(sequelize, DataTypes);
 
+// 1:1 - 1 property, 1 season price
+db.property.hasOne(db.seasonPrice, {
+    foreignKey: 'property_id'
+});
+db.seasonPrice.belongsTo(db.property, {
+    foreignKey: 'property_id'
+});
 
 // 1:N - 1 user, N bookings
 db.user.hasMany(db.booking, {
