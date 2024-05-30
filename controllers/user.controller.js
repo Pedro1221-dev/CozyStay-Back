@@ -1204,9 +1204,27 @@ exports.findBookingsCurrent = async (req, res) => {
         // Extract guest ID from request parameters
         const guest_id = req.userData.user_id;
 
+        // Defining the base where clause with the guest ID
+        let whereClause = { guest_id: guest_id };
+
+        // Checking the value of the 'status' query parameter
+        if (req.query.status === 'upcoming') {
+            // If the status is 'upcoming', set the condition to get bookings with check_out_date
+            // greater than or equal to the current date (future bookings)
+            whereClause.check_out_date = {
+                [Op.gte]: new Date() 
+            };
+        } else if (req.query.status === 'past') {
+            // If the status is 'past', set the condition to get bookings with check_out_date
+            // less than the current date (past bookings)
+            whereClause.check_out_date = {
+                [Op.lt]: new Date() 
+            };
+        }
+
         // Find bookings by owner ID
         let bookings = await Booking.findAll({ 
-            where: { guest_id: guest_id },
+            where: whereClause,
         });
 
         // If no bookings found for the owner, return a 404 response
