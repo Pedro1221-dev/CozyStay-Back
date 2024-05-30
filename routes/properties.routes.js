@@ -4,6 +4,7 @@ const express = require('express');
 const router = express.Router();
 // Importing middleware functions
 const checkAuth = require('../middleware/check-auth');
+const checkAdmin= require('../middleware/check-admin');
 
 // Importing multer 
 const upload = require('../config/multerConfig'); 
@@ -21,7 +22,7 @@ router.route('/:property_id')
     .delete( checkAuth, propertyController.delete) // PROTECTED (user logged in)
 
 router.route('/:property_id/confirm')
-    //.patch( propertiesController.xxx ) // PROTECTED
+    .patch( checkAuth, checkAdmin, propertyController.confirm ) // PROTECTED (admin logged in)
 
 router.route('/:property_id/payment-methods')
     //.get( propertiesController.xxx ) // PUBLIC
