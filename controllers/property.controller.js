@@ -317,11 +317,6 @@ exports.findOne = async (req, res) => {
                     model: db.booking,
                     as: 'rating',
                     attributes: ["number_stars", "comment", "rating_date"],
-                    where: {
-                        number_stars: {
-                            [Sequelize.Op.not]: null
-                        }
-                    },
                     include: [
                         { 
                             model: db.user,
@@ -332,6 +327,8 @@ exports.findOne = async (req, res) => {
                 },
             ]
         });
+
+        console.log(property);
 
         // If the property is not found, return a 404 response
         if (!property) {
@@ -353,6 +350,9 @@ exports.findOne = async (req, res) => {
                 },
             ]
         });
+
+        // Return only the bookings that don't have number_stars null (meaning no review was made)
+        property.dataValues.rating = property.rating.filter(booking => booking.number_stars !== null);
 
         /// Calculate the average rating
         let totalStars = 0;
