@@ -317,7 +317,7 @@ exports.findOne = async (req, res) => {
                 {
                     model: db.booking,
                     as: 'rating',
-                    attributes: ["number_stars", "comment", "rating_date"],
+                    attributes: ["check_in_date", "check_out_date", "number_stars", "comment", "rating_date"],
                     include: [
                         { 
                             model: db.user,
@@ -338,6 +338,17 @@ exports.findOne = async (req, res) => {
                 msg: `Property with ID ${req.params.property_id} not found.`
             });
         }
+
+        const futureBookings = property.rating.filter(booking => new Date(booking.check_out_date) > new Date());
+
+        // Extrair as datas de check-in e check-out das reservas
+        const bookedDates = futureBookings.map(booking => ({
+            checkInDate: booking.check_in_date,
+            checkOutDate: booking.check_out_date
+        }));
+
+        // Adicionar as datas reservadas à resposta JSON
+        property.dataValues.bookedDates = bookedDates;
 
         // Find the owner of the property
         let owner = await db.user.findByPk(property.owner_id, {
