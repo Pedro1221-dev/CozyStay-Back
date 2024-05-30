@@ -51,6 +51,7 @@ db.user_password_token = require("./userPasswordToken.model.js")(sequelize, Data
 
 // 1:N - 1 user, N bookings
 db.user.hasMany(db.booking, {
+    foreignKey: 'guest_id',
     onDelete: "CASCADE"
 });
 db.booking.belongsTo(db.user, {
