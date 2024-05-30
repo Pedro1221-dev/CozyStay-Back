@@ -50,7 +50,8 @@ db.user_password_token = require("./userPasswordToken.model.js")(sequelize, Data
 
 // 1:1 - 1 property, 1 season price
 db.property.hasOne(db.seasonPrice, {
-    foreignKey: 'property_id'
+    foreignKey: 'property_id',
+    as: 'seasonPrice'
 });
 db.seasonPrice.belongsTo(db.property, {
     foreignKey: 'property_id'
