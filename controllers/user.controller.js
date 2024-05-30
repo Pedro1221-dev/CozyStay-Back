@@ -997,27 +997,6 @@ exports.findOneCurrent = async (req, res) => {
             ]
         });
 
-        // Check if the user has properties registered
-        const propertiesCount = await db.property.count({ where: { owner_id: userId } });
-
-        // Check if the user has bookings made
-        const bookingsCount = await db.booking.count({ where: { guest_id: userId } });
-
-        // Determine the user status based on properties and bookings
-        let userType;
-        if (propertiesCount > 0 && bookingsCount > 0) {
-            userType = 'Owner/Guest';
-        } else if (propertiesCount > 0) {
-            userType = 'Owner';
-        } else if (bookingsCount > 0) {
-            userType = 'Guest';
-        } else {
-            userType = 'User';
-        }
-
-        // Add the user type to the user object
-        user.dataValues.userType = userType;
-
         // If the user is not found, return a 404 response
         if (!user) {
             return res.status(404).json({
@@ -1025,6 +1004,72 @@ exports.findOneCurrent = async (req, res) => {
                 msg: `User with ID ${userId} not found.`
             });
         }
+
+        // Count the total number of properties owned by the user
+        const totalOwnedProperties = await db.property.count({ where: { owner_id: userId } });
+        
+        // Count the total number of properties rented by the user
+        const totalRentedProperties = await db.booking.count({ where: { guest_id: userId } });
+
+        // Determine the user type based on the ownership and rental status
+        let userType;
+        if (totalOwnedProperties > 0 && totalRentedProperties > 0) {
+            userType = 'Owner/Guest';
+        } else if (totalOwnedProperties > 0) {
+            userType = 'Owner';
+        } else if (totalRentedProperties > 0) {
+            userType = 'Guest';
+        } else {
+            userType = 'User';
+        }
+
+        // Find all properties owned by the user
+        const userProperties = await db.property.findAll({
+            where: { owner_id: userId }
+        });
+
+        // Initialize variables to calculate total property reviews and sum of ratings
+        let totalPropertyReviews = 0;
+        let totalRatings = 0;
+
+        // Loop through each property owned by the user
+        for (const property of userProperties) {
+            // Find and count bookings for the current property with reviews (number_stars not null)
+            const { count: totalRentedProperties, rows: bookingsWithReviews } = await db.booking.findAndCountAll({
+                where: { 
+                    property_id: property.property_id,
+                    number_stars: { [Op.ne]: null } 
+                }
+            });
+            // Add the count of reviews for the current property to the total
+            totalPropertyReviews += totalRentedProperties;
+            // Calculate sum of ratings for the current property
+            totalRatings += bookingsWithReviews.reduce((acc, booking) => acc + booking.number_stars, 0);
+        }
+
+        // Calculate average rating for properties owned by the user
+        const averagePropertyRating = totalPropertyReviews > 0 ? totalRatings / totalPropertyReviews : 0;
+        
+        // Count the total number of reviews made by the user as a guest
+        const totalGuestReviews = await db.booking.count({
+            where: { 
+                guest_id: userId,
+                number_stars: { [Op.ne]: null } 
+            }
+        });
+
+        // Add the user type to the user object
+        user.dataValues.userType = userType;
+        // Add total property reviews to the user object
+        user.dataValues.totalPropertyReviews = totalPropertyReviews;
+        // Add average property rating to the user object
+        user.dataValues.averagePropertyRating = averagePropertyRating;
+        // Add total guest reviews to the user object
+        user.dataValues.totalGuestReviews = totalGuestReviews;
+        // Add total rented properties to the user object
+        user.dataValues.totalRentedProperties = totalRentedProperties;
+        // Add total owned properties to the user object
+        user.dataValues.totalOwnedProperties = totalOwnedProperties;
 
         // If user is found, return it along with links for actions (HATEOAS)
         res.status(200).json({ 
