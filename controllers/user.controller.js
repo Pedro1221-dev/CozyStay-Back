@@ -292,7 +292,27 @@ exports.delete = async (req, res) => {
         }
 
         // Find the user by their ID
-        let user = await User.findByPk(req.params.user_id)
+        let user = await User.findByPk(req.params.user_id);
+
+        // Check if the user is the owner of any properties with pending bookings
+        const propertiesWithPendingBookings = await db.property.findOne({
+            where: { owner_id: user.user_id },
+            include: {
+                model: db.booking,
+                as: 'rating',
+                where: { 
+                    check_out_date: { [Op.gt]: new Date() } 
+                },
+            }
+        });
+
+        // If the user owns properties with pending bookings, return an error
+        if (propertiesWithPendingBookings) {
+            return res.status(400).json({
+                success: false,
+                msg: "Unable to delete the user because there are pending bookings associated with properties owned by him."
+            });
+        }
 
         // Check if the user has an avatar image associated and delete it from Cloudinary if it exists
         if (user.url_avatar && user.cloudinary_avatar_id) {
@@ -326,6 +346,7 @@ exports.delete = async (req, res) => {
         });
     }
     catch (err) {
+        console.log(err);
          // If an error occurs, return a 500 response with an error message
         res.status(500).json({
             success: false, 
