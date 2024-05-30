@@ -4,6 +4,12 @@ const db = require("../models/index.js");
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError, Sequelize, where, QueryTypes, sequelize } = require('sequelize');
 
+/**
+ * Find all statistics.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
 exports.findAll = async (req, res) => {
     try {
         // Find the total number of properties with status "available"
