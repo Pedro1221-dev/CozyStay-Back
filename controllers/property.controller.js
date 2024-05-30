@@ -670,7 +670,7 @@ exports.update = async (req, res) => {
 exports.create = async (req, res) => {
     try {
         // Extracts the properties from the request body
-        // const { owner_id, title, city, country, address, number_bedrooms, number_beds, number_bathrooms, number_guests_allowed, description, typology, price} = req.body;
+        const { owner_id, title, city, country, address, number_bedrooms, number_beds, number_bathrooms, number_guests_allowed, description, typology, price} = req.body;
 
         // Count the number of properties the user owns
         const propertyCount = await Property.count({
@@ -708,7 +708,21 @@ exports.create = async (req, res) => {
         }
 
         // Save the property in the database
-        let newProperty = await Property.create(req.body);
+        let newProperty = await Property.create(
+            { 
+                owner_id, 
+                title, 
+                city, 
+                country, 
+                address, 
+                number_bedrooms, 
+                number_beds, 
+                number_bathrooms, 
+                number_guests_allowed, 
+                description, 
+                typology, 
+                price
+            });
 
         // Process and upload photos if provided
         if (req.files) {
@@ -732,7 +746,17 @@ exports.create = async (req, res) => {
                 });
             }
         }
-        
+
+        // Check if start_date, end_date, and addition are provided in the request body
+        if (req.body.start_date && req.body.end_date && req.body.addition) {
+            // Create a new season price entry in the database
+            await db.seasonPrice.create({
+                property_id: newProperty.property_id,
+                start_date: req.body.start_date,
+                end_date:  req.body.end_date,
+                addition: req.body.addition
+            });
+        }
 
         // Return a sucess message,along with links for actions (HATEOAS)
         res.status(201).json({
