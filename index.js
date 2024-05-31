@@ -31,6 +31,10 @@ app.use('/properties', require('./routes/properties.routes.js'))
 app.use('/bookings', require('./routes/bookings.routes.js'))
 // routing middleware for resource home
 app.use('/home', require('./routes/home.routes.js'))
+// routing middleware for resource facilities
+app.use('/facilities', require('./routes/facilities.routes.js'))
+// routing middleware for resource payment-methods
+app.use('/payment-methods', require('./routes/payment-methods.routes.js'))
 
 
 // handle invalid routes
