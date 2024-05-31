@@ -72,8 +72,20 @@ npm install cloudinary
 npm install multer
 ```
 
+### axios
+
+```sh
+npm install axios
+```
+
+### jest
+
+```sh
+npm install jest
+```
+
 # Bulk Package Installation
 
 ```sh
-npm install cors dotenv express sequelize mysql2 bcrypt jsonwebtoken nodemailer cloudinary multer
+npm install cors dotenv express sequelize mysql2 bcrypt jsonwebtoken nodemailer cloudinary multer axios jest
 ```
