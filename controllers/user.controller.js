@@ -1131,7 +1131,7 @@ exports.findProperties = async (req, res) => {
             include: [
                 {
                     model: db.paymentMethod,
-                    as: 'payment-method',
+                    as: 'paymentMethod',
                     attributes: ["description"],
                     through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
                 }, 
@@ -1216,7 +1216,7 @@ exports.findPropertiesCurrent = async (req, res) => {
             include: [
                 {
                     model: db.paymentMethod,
-                    as: 'payment-method',
+                    as: 'paymentMethod',
                     attributes: ["description"],
                     through: { attributes: ["payment_method_id"] } // Specifing atributes from the payment_method table
                 }, 
