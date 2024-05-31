@@ -53,7 +53,7 @@ describe('Retrieve user list', () => {
             }
         });
 
-        test('Sending a request with a correct authentication token should not return any error', async () => {
+        test('Sending a request with a correct authentication token should return a sucess message', async () => {
             try {
                 // Valid admin authentication token
                 const validAdminToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IjQwMjIwMTkxQGVzbWFkLmlwcC5wdCIsInR5cGUiOiJhZG1pbiIsInVzZXJfaWQiOjEyOCwiaWF0IjoxNzE3MTcwNzQ1LCJleHAiOjE3MTcxNzQzNDV9.KWBsSDN6UN0-sv8gkHRpsHhQrSWQmlAFIy3UeNKrlbI';
