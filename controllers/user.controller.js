@@ -565,14 +565,14 @@ exports.create = async (req, res) => {
         // Save the user in the database
         let newUser = await User.create(userdata);
 
-        // Extract language_ids from the array of language objects
-        const languageIds = languages.map(language => language.language_id);
+        // If the user inserts languages
+        if (languages) {
+            // Extract language_ids from the array of language objects
+            const languageIds = languages.map(language => language.language_id);
 
-        // Associate the extracted language IDs with the newly created user
-        await newUser.addLanguage(languageIds); 
-
-        //const user = await User.findByPk(newUser.user_id);
-        //await user.addLanguage(languageIds); 
+            // Associate the extracted language IDs with the newly created user
+            await newUser.addLanguage(languageIds); 
+        }
 
         // Send OTP verification email to the user
         await sendOTPVerificationEmail(newUser.user_id, email, res);
