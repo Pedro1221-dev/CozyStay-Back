@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1717238431642" clover="3.2.0">
+  <project timestamp="1717238431642" name="All files">
+    <metrics statements="10" coveredstatements="8" conditionals="2" coveredconditionals="2" methods="1" coveredmethods="1" elements="13" coveredelements="11" complexity="0" loc="10" ncloc="10" packages="1" files="1" classes="1"/>
+    <file name="check-auth.js" path="C:\Users\User\OneDrive - Instituto Politécnico do Porto\Faculdade 2022\Cadeiras\2 Ano\2 Semestre\CozyStay-Back\middleware\check-auth.js">
+      <metrics statements="10" coveredstatements="8" conditionals="2" coveredconditionals="2" methods="1" coveredmethods="1"/>
+      <line num="2" count="1" type="stmt"/>
+      <line num="11" count="1" type="stmt"/>
+      <line num="12" count="3" type="stmt"/>
+      <line num="14" count="3" type="stmt"/>
+      <line num="18" count="3" type="stmt"/>
+      <line num="21" count="0" type="stmt"/>
+      <line num="24" count="0" type="stmt"/>
+      <line num="27" count="3" type="cond" truecount="2" falsecount="0"/>
+      <line num="29" count="1" type="stmt"/>
+      <line num="34" count="2" type="stmt"/>
+    </file>
+  </project>
+</coverage>
