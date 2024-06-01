@@ -45,7 +45,7 @@ describe('Auth Middleware', () => {
 
         // Verify if the status response was called with 401 (unauthorized)
         expect(res.status).toHaveBeenCalledWith(401);
-        
+
         // Verify if the JSON response contains the correct error message
         expect(res.json).toHaveBeenCalledWith({
             msg: 'No access token provided'
@@ -97,7 +97,7 @@ describe('Auth Middleware', () => {
         // Setting a valid token
         const userData = {
             userId: '123',
-            type: 'admin'
+            type: 'user'
         };
         const token = jwt.sign(userData, 'testsecret', { expiresIn: '2m' });
 
