@@ -5,8 +5,32 @@ const bcrypt = require('bcrypt');
 // read environment variables from .env file
 require('dotenv').config(); 
 
+// Importing all the models
+const db = require("../../../models/index.js");
+
 // Define variable to store authentication token
 let authToken;
+
+/**
+ * Function to delete a user from the database.
+ *
+ * @param {string} userIdToDelete The ID of the user to delete.
+ * @param {string} authToken The authentication token used for authorization.
+ * @returns {Promise<void>} A promise that resolves after the user is deleted or rejects if an error occurs.
+ */
+const deleteUser = async (userIdToDelete, authToken) => {
+    try {
+        // Sends a request to delete the user using the user ID and the authentication token
+        await axios.delete(`http://127.0.0.1:3000/users/${userIdToDelete}`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+    } catch (error) {
+        // If an error occurs while deleting the user, logs the error
+        console.error('Error deleting user:', error);
+    }
+};
 
 // Before all tests, authenticate and obtain the authentication token
 beforeAll(async () => {
@@ -24,6 +48,8 @@ beforeAll(async () => {
         console.error('Error getting authentication token:', error);
     }
 });
+
+
 
 describe('Password Validation', () => {
     // Define variable to store user ID
@@ -128,17 +154,7 @@ describe('Password Validation', () => {
 
     // After all tests are done, delete the user from the database
     afterAll(async () => {
-        try {
-            // Send a request to delete the user using the user ID and authentication token
-            await axios.delete(`http://127.0.0.1:3000/users/${userIdToDelete}`, {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            });
-        } catch (error) {
-            // If an error occurs while deleting the user, log the error
-            console.error('Error deleting user:', error);
-        }
+        await deleteUser(userIdToDelete, authToken);
     });
 });
 
@@ -186,17 +202,7 @@ describe('Password Hashing', () => {
 
     // After each tests are done, delete the user from the database
     afterAll(async () => {
-        try {
-            // Send a request to delete the user using the user ID and authentication token
-            await axios.delete(`http://127.0.0.1:3000/users/${userIdToDelete}`, {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            });
-        } catch (error) {
-            // If an error occurs while deleting the user, log the error
-            console.error('Error deleting user:', error);
-        }
+        await deleteUser(userIdToDelete, authToken);
     });
 });
 
@@ -315,16 +321,11 @@ describe('User Creation', () => {
             // Send a request to create a new user with the defined data
             const response = await axios.post('http://127.0.0.1:3000/users', userData);
 
-            console.log(response.data.data.user_id);
-
             // Store the user ID for later use in deletion
             userIdToDelete = response.data.data.user_id;
 
             // Verify if the request is successful (status code 200)
             expect(response.status).toBe(200);
-
-            // response.data.msg
-            //console.log(response.data.msg);
 
             // Verify if the response contains the expected message
             expect(response.data.msg).toContain('Verification otp email sent');
@@ -336,17 +337,157 @@ describe('User Creation', () => {
 
     // After each tests are done, delete the user from the database
     afterAll(async () => {
-        try {
-            // Send a request to delete the user using the user ID and authentication token
-            await axios.delete(`http://127.0.0.1:3000/users/${userIdToDelete}`, {
-                headers: {
-                    'Authorization': `Bearer ${authToken}`
-                }
-            });
-        } catch (error) {
-            // If an error occurs while deleting the user, log the error
-            console.error('Error deleting user:', error);
-        }
+        await deleteUser(userIdToDelete, authToken);
     });
 });
+
+describe('User Language Association', () => {
+    // Define variable to store user ID
+    let userIdToDelete;
+
+    test('should associate and store languages correctly in the database', async () => {
+        // Define user data with language associations
+        const userData = {
+            name: 'testuser1',
+            email: '40220191@esmad.ipp.pt',
+            password: 'password123$',
+            nationality: 'portuguese',
+            vat_number: '12345678912341', 
+            languages: [
+                {
+                    language_id: 1
+                },
+                {
+                    language_id: 2
+                },
+                {
+                    language_id: 3
+                }
+            ]
+        };
+
+        try {
+            // Send a request to create a new user with the language associations
+            const response = await axios.post('http://127.0.0.1:3000/users', userData);
+
+            // Store the user ID for later use in deletion
+            userIdToDelete = response.data.data.user_id;
+
+            // Verify if the request was successful (status code 200)
+            expect(response.status).toBe(200);
+
+            // Retrieve the user from the database to verify language associations
+            const user = await db.user.findOne({ where: { email: userData.email } });
+
+            // Retrieve the languages associated with the user
+            const languages = await user.getLanguage();
+
+            // Extract only the language IDs from the returned languages
+            const returnedLanguageIds = languages.map(lang => lang.language_id);
+
+            // Extract only the language IDs from the languages sent in the user data
+            const userDataLanguageIds = userData.languages.map(lang => lang.language_id);
+
+            // Verify if the returned language IDs match the language IDs sent in the user data
+            expect(returnedLanguageIds).toEqual(userDataLanguageIds);
+        } catch (error) {
+            // Log any errors and fail the test if an error occurs
+            throw new Error('Failed to associate and store languages: ' + error.message);
+        }
+    });
+
+    // After each tests are done, delete the user from the database
+    afterAll(async () => {
+        await deleteUser(userIdToDelete, authToken);
+    });
+});
+
+describe('Email Confirmation', () => {
+    // Define variable to store user ID
+    let userIdToDelete;
+
+    test('should send verification email with OTP to the specified email address', async () => {
+        // Define user data with a valid email address
+        const userData = {
+            name: 'testuser1',
+            email: '40220191@esmad.ipp.pt',
+            password: 'password123$',
+            nationality: 'portuguese',
+            vat_number: '12345678912341', 
+        };
+
+        try {
+            // Send a request to create a new user with the defined data
+            const response = await axios.post('http://127.0.0.1:3000/users', userData);
+
+            // Store the user ID for later use in deletion
+            userIdToDelete = response.data.data.user_id;
+
+            // Verify if the request is successful (status code 200)
+            expect(response.status).toBe(200);
+
+            // Verify if the email in the response data matches the email provided in the userData object
+            expect(response.data.data.email).toEqual(userData.email);
+            
+            // Verify if the response contains the expected message
+            expect(response.data.msg).toContain('Verification otp email sent');
+
+            // Add additional assertions to ensure email sending functionality
+
+        } catch (error) {
+            // If an error occurs, fail the test
+            throw new Error('Failed to send verification email: ' + error.message);
+        }
+    });
+
+    // After each tests are done, delete the user from the database
+    afterAll(async () => {
+        await deleteUser(userIdToDelete, authToken);
+    });
+});
+
+describe('Save Confirmation Code', () => {
+    // Define variable to store user ID
+    let userIdToDelete;
+
+    test('should save confirmation code correctly in the database', async () => {
+        // Define user data with a valid email address
+        const userData = {
+            name: 'testuser1',
+            email: '40220191@esmad.ipp.pt',
+            password: 'password123$',
+            nationality: 'portuguese',
+            vat_number: '12345678912341', 
+        };
+
+        try {
+            // Send a request to create a new user with the defined data
+            const response = await axios.post('http://127.0.0.1:3000/users', userData);
+
+            // Store the user ID for later use in deletion
+            userIdToDelete = response.data.data.user_id;
+
+            // Verify if the request is successful (status code 200)
+            expect(response.status).toBe(200);
+
+            // Retrieve the user from the database to verify language associations
+            const user = await db.user.findOne({ where: { email: userData.email } });
+            const otp = await user.getUserOTP();
+
+            // Verify if it saved correctly in the database, with the right atributes
+            expect(otp[0]).toHaveProperty('user_id', 'otp_code', 'created_at', 'expired_at');
+
+        } catch (error) {
+            // If an error occurs, fail the test
+            throw new Error('Failed to send verification email: ' + error.message);
+        }
+    });
+
+    // After each tests are done, delete the user from the database
+    afterAll(async () => {
+        await deleteUser(userIdToDelete, authToken);
+    });
+});
+
+
 
