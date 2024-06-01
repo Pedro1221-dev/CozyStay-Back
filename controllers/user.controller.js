@@ -216,6 +216,7 @@ exports.findAll = async (req, res) => {
 exports.findOne = async (req, res) => {
     try {
         let user = await User.findByPk(req.params.user_id, {
+            attributes: { exclude: ['password'] }, // Exclude the password attribute
             include: [
                 {
                     model: db.language,
