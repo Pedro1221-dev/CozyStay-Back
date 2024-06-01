@@ -91,6 +91,7 @@ db.photo.belongsTo(db.property,{
 // if user is deleted, delete all the otp associated with it
 db.user.hasMany(db.user_otp, {
     foreignKey: 'user_id',
+    as: 'userOTP',
     onDelete: "CASCADE"
 });
 db.user_otp.belongsTo(db.user, {
