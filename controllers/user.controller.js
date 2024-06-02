@@ -86,7 +86,7 @@ exports.findAll = async (req, res) => {
 
         // Validate and handle 'blocked' query parameter
         if (blocked && !(blocked === '0' || blocked === '1')) {
-            return res.status(400).json({ message: "O parâmetro 'blocked' deve ser um valor booleano ('0' for false and '1' for true)"});
+            return res.status(400).json({ message: "The 'blocked' parameter must be a boolean value ('0' for false and '1' for true)"});
         }
         
         // Validate query parameters
@@ -100,6 +100,7 @@ exports.findAll = async (req, res) => {
 
         // Find users with pagination and search options
         const users = await User.findAll({
+            attributes: { exclude: ['password'] }, // Exclude the password attribute
             limit: limit,
             offset: offset,
             ...searchOptions,
@@ -142,7 +143,7 @@ exports.findAll = async (req, res) => {
 
         // Handle no results found
         if (users.length === 0) {
-            return res.status(400).json({ message: "No results found" });
+            return res.status(404).json({ message: "No results found" });
         }
 
         // Handle out-of-range page number
@@ -171,31 +172,31 @@ exports.findAll = async (req, res) => {
             },
             data: usersWithLinks,
             links: [
-            { 
-                "rel": "add-user", 
-                "href": `/users`, 
-                "method": "POST" 
-            },
-            { 
-                "rel": "previous-page",
-                "href": `/users?limit=${limit}&page=${previousPage}`,
-                "method": "GET"
-            },
-            { 
-                "rel": "next-page",
-                "href": `/users?limit=${limit}&page=${nextPage}`,
-                "method": "GET"
-            },
-            { 
-                "rel": "last-page",
-                "href": `/users?limit=${limit}&page=${totalPages}`,
-                "method": "GET"
-            },
-            { 
-                "rel": "first-page",
-                "href": `/users?limit=${limit}&page=1`,
-                "method": "GET"
-            }
+                { 
+                    "rel": "add-user", 
+                    "href": `/users`, 
+                    "method": "POST" 
+                },
+                { 
+                    "rel": "previous-page",
+                    "href": `/users?limit=${limit}&page=${previousPage}`,
+                    "method": "GET"
+                },
+                { 
+                    "rel": "next-page",
+                    "href": `/users?limit=${limit}&page=${nextPage}`,
+                    "method": "GET"
+                },
+                { 
+                    "rel": "last-page",
+                    "href": `/users?limit=${limit}&page=${totalPages}`,
+                    "method": "GET"
+                },
+                { 
+                    "rel": "first-page",
+                    "href": `/users?limit=${limit}&page=1`,
+                    "method": "GET"
+                }
             ]
         });
     } catch (error) {
