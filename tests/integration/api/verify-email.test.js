@@ -26,7 +26,7 @@ const deleteUser = async (userIdToDelete, authToken) => {
 };
 
 // Before all tests, authenticate and obtain the authentication token
-beforeAll(async () => {
+/* beforeAll(async () => {
     try {
         // Send a request to authenticate the user and obtain the authentication token
         const authResponse = await axios.post('http://127.0.0.1:3000/users/login', {
@@ -40,9 +40,9 @@ beforeAll(async () => {
         // Log an error if authentication fails
         console.error('Error getting authentication token:', error);
     }
-});
+}); */
 
-describe('Password Validation', () => {
+describe('Email Verification', () => {
     // Define variable to store user ID
     //let userIdToDelete;
     
@@ -70,7 +70,7 @@ describe('Password Validation', () => {
     test('should return an error message when OTP is missing', async () => {
         // Define the request body without the otp, only with the user_id
         const requestBody = {
-            user_id: 370
+            user_id: 374
         };
 
         try {
@@ -88,11 +88,33 @@ describe('Password Validation', () => {
         }
     });
 
+    test('should return an error message when OTP is incorrect', async () => {
+        // Define the request body with a valid user_id and an incorrect otp
+        const requestBody = {
+            user_id: 380,
+            otp: '431081'
+        };
+
+        try {
+            // Send a POST request to verify the email with the incorrect otp
+            await axios.post('http://127.0.0.1:3000/users/verify-email', requestBody);
+
+            // If the request is successful, throw an error, as we expect a validation failure
+            throw new Error('Expected request to fail due to incorrect OTP');
+        } catch (error) {
+            // Verify if the error is due to the incorrect otp
+            expect(error.response.status).toBe(400); 
+
+            // Verify if the error message is the expected one about the invalid OTP
+            expect(error.response.data.msg).toBe("Invalid OTP. Please try again.");
+        }
+    });
+
     test('should verify email successfully with valid user_id and otp', async () => {
         // Define valid user_id and otp
         const requestBody = {
-            user_id: 371,
-            otp: '763301'
+            user_id: 374,
+            otp: '122511'
         };
     
         try {
@@ -113,6 +135,7 @@ describe('Password Validation', () => {
                 { "rel": "modify", "href": `/user/${requestBody.user_id}`, "method": "PATCH" }
             ]);
         } catch (error) {
+            console.log(error);
             // If an error occurs, fail the test
             throw error;
         }
@@ -121,8 +144,8 @@ describe('Password Validation', () => {
     test('should return an error message when verifying email for an already verified account', async () => {
         // Define user_id for an already verified account
         const requestBody = {
-            user_id: 371,
-            otp: '763301'
+            user_id: 374,
+            otp: '122511'
         };
     
         try {
@@ -141,38 +164,64 @@ describe('Password Validation', () => {
         }
     });
 
-    /* test('should successfully verify email when correct user_id and OTP are provided', async () => {
-        // Define user_id and OTP for a valid verification
+    test('should return an error message when OTP is expired', async () => {
+        // Define user_id and an expired otp
         const requestBody = {
-            user_id: 373,
-            otp: '466521'
+            user_id: 379,
+            otp: '354153' 
         };
-    
+
         try {
-            // Send a POST request to verify the email with the correct user_id and OTP
+            // Send a POST request to verify the email with an expired OTP
+            await axios.post('http://127.0.0.1:3000/users/verify-email', requestBody);
+
+            // If the request is successful, throw an error, as we expect a validation failure
+            throw new Error('Expected request to fail due to expired OTP');
+        } catch (error) {
+            // Verify if the error is due to the expired OTP
+            expect(error.response.status).toBe(400);
+
+            // Verify if the error message is the expected one about the expired OTP
+            expect(error.response.data.msg).toBe("The code has expired."); 
+        }
+    });
+
+    test('should successfully verify email with valid user_id and otp and remove the otp record from the database', async () => {
+        // Define valid user_id and otp
+        const requestBody = {
+            user_id: 381,
+            otp: '431083'
+        };
+
+        try {
+            // Send a POST request to verify the email with valid user_id and otp
             const response = await axios.post('http://127.0.0.1:3000/users/verify-email', requestBody);
 
-            // Retrieve the user from the database to verify language associations
-            const user = await db.user_otp.findOne({ where: { user_id: requestBody.user_id } });
-    
             // Verify if the response status is 200, indicating success
             expect(response.status).toBe(200);
-    
+
             // Verify if the response contains the success message
             expect(response.data.success).toBe(true);
             expect(response.data.msg).toBe("User's email successfully verified");
-    
-            // Verify if the response contains the links for further actions
-            expect(response.data.links).toBeDefined();
-            expect(response.data.links.length).toBe(3);
 
-            expect(user[0]).toHaveProperty('user_id', 'otp_code', 'created_at', 'expired_at');
+            // Verify if the response contains the links for actions (HATEOAS)
+            expect(response.data.links).toEqual([
+                { "rel": "self", "href": `/user/${requestBody.user_id}`, "method": "GET" },
+                { "rel": "delete", "href": `/user/${requestBody.user_id}`, "method": "DELETE" },
+                { "rel": "modify", "href": `/user/${requestBody.user_id}`, "method": "PATCH" }
+            ]);
 
+            // Verify if the user's email verification status is updated in the database
+            const user = await db.user.findOne({ where: { user_id: requestBody.user_id } });
+            expect(user.verified).toBe(true);
+
+            // Verify if the OTP record is removed from the database
+            const otpRecord = await db.user_otp.findOne({ where: { user_id: requestBody.user_id } });
+            expect(otpRecord).toBeNull();
         } catch (error) {
-            console.log(error);
             // If an error occurs, fail the test
-            throw new Error('Expected request to succeed but got an error: ' + error);
+            throw error;
         }
-    }); */
+    });
 });
 
