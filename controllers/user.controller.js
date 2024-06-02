@@ -802,9 +802,10 @@ exports.login = async (req, res) => {
                 } 
             });
         
-        // If user doesn't exist, return 401 Unauthorized status with an error message
+        // If user doesn't exist, return 400 Bad Request status with an error message
         if (!user) {
-            return res.status(401).json({
+            return res.status(400).json({
+                success: false,
                 msg: 'Invalid credentials'
             });
         }
@@ -826,12 +827,14 @@ exports.login = async (req, res) => {
                 }
             );
             return res.status(200).json({
+                success: true,
                 msg: 'Auth successful',
                 accessToken: token
             });
         } else {
-            // If passwords don't match, return 401 Unauthorized status with an error message
-            return res.status(401).json({
+            // If passwords don't match, return 400 Bad Request status with an error message
+            return res.status(400).json({
+                success: false,
                 msg: 'Invalid credentials'
             });
         }
