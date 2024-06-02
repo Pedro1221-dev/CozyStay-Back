@@ -666,6 +666,22 @@ exports.verifyEmail = async (req, res) => {
     try {
         const { user_id, otp } = req.body;
 
+        // If the user_id is not provided
+        if (!user_id) {
+            return res.status(400).json({
+                success: false,
+                msg: "User ID is required. Please provide a valid user ID."
+            });
+        }
+
+        // If the otp code is not provided
+        if (!otp) {
+            return res.status(400).json({
+                success: false,
+                msg: "OTP is required. Please provide a valid OTP code."
+            });
+        }
+
         // Find the OTP record associated with the user
         const otpRecord = await UserOTP.findOne({
             where: {
