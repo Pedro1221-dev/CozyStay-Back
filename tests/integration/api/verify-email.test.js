@@ -1,5 +1,7 @@
 // Importing the axios library
 const axios = require('axios');
+// read environment variables from .env file
+require('dotenv').config(); 
 
 // Importing all the models
 const db = require("../../../models/index.js");
@@ -11,7 +13,7 @@ const db = require("../../../models/index.js");
  * @param {string} authToken The authentication token used for authorization.
  * @returns {Promise<void>} A promise that resolves after the user is deleted or rejects if an error occurs.
  */
-const deleteUser = async (userIdToDelete, authToken) => {
+/* const deleteUser = async (userIdToDelete, authToken) => {
     try {
         // Sends a request to delete the user using the user ID and the authentication token
         await axios.delete(`http://127.0.0.1:3000/users/${userIdToDelete}`, {
@@ -23,7 +25,7 @@ const deleteUser = async (userIdToDelete, authToken) => {
         // If an error occurs while deleting the user, logs the error
         console.error('Error deleting user:', error);
     }
-};
+}; */
 
 // Before all tests, authenticate and obtain the authentication token
 /* beforeAll(async () => {
@@ -70,7 +72,7 @@ describe('Email Verification', () => {
     test('should return an error message when OTP is missing', async () => {
         // Define the request body without the otp, only with the user_id
         const requestBody = {
-            user_id: 374
+            user_id: 482
         };
 
         try {
@@ -91,7 +93,7 @@ describe('Email Verification', () => {
     test('should return an error message when OTP is incorrect', async () => {
         // Define the request body with a valid user_id and an incorrect otp
         const requestBody = {
-            user_id: 380,
+            user_id: 482,
             otp: '431081'
         };
 
@@ -113,8 +115,8 @@ describe('Email Verification', () => {
     test('should verify email successfully with valid user_id and otp', async () => {
         // Define valid user_id and otp
         const requestBody = {
-            user_id: 374,
-            otp: '122511'
+            user_id: 482,
+            otp: '362862'
         };
     
         try {
@@ -144,7 +146,7 @@ describe('Email Verification', () => {
     test('should return an error message when verifying email for an already verified account', async () => {
         // Define user_id for an already verified account
         const requestBody = {
-            user_id: 374,
+            user_id: 482,
             otp: '122511'
         };
     
@@ -167,7 +169,7 @@ describe('Email Verification', () => {
     test('should return an error message when OTP is expired', async () => {
         // Define user_id and an expired otp
         const requestBody = {
-            user_id: 379,
+            user_id: 483,
             otp: '354153' 
         };
 
@@ -186,11 +188,11 @@ describe('Email Verification', () => {
         }
     });
 
-    test('should successfully verify email with valid user_id and otp and remove the otp record from the database', async () => {
+    test.only('should successfully verify email with valid user_id and otp and remove the otp record from the database', async () => {
         // Define valid user_id and otp
         const requestBody = {
-            user_id: 381,
-            otp: '431083'
+            user_id: 483,
+            otp: '237307'
         };
 
         try {
