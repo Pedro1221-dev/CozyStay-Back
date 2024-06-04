@@ -78,7 +78,7 @@ exports.findAll = async (req, res) => {
                 ROUND(AVG(b.number_stars), 1) AS 'average_rating', 
                 p.price, 
                 COUNT(b.booking_id) AS 'reservation_count',
-                GROUP_CONCAT(ph.url_photo) AS 'photos'
+                MIN(ph.url_photo) AS 'photo'
             FROM 
                 property p
             JOIN 
