@@ -481,7 +481,12 @@ exports.findOne = async (req, res) => {
         });
 
         // Calculate the average rating
-        const averageRating = totalStars / numValidRatings;
+        let averageRating = 0; 
+
+        if (numValidRatings) { 
+            averageRating = totalStars / numValidRatings;
+        }
+
 
         // Calculate the average rating of the host
         // Finds the average of the number_stars column from the booking table
