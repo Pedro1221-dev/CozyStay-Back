@@ -70,6 +70,7 @@ exports.findAll = async (req, res) => {
         // Query to find the top 6 properties with the highest reservation counts and average ratings, along with their photos
         const topProperties = await db.sequelize.query(`
             SELECT 
+                p.property_id,
                 p.title, 
                 p.city, 
                 p.country, 
