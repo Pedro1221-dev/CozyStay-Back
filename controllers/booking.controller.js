@@ -55,8 +55,8 @@ exports.findOne = async (req, res) => {
  */
 exports.create = async (req, res) => {
     try {
-        // Extracts the property_id, check_in_date, check_out_date, number_guests, final_price, payment_method_id properties from the request body
-        //const { property_id, check_in_date, check_out_date, number_guests, final_price, payment_method_id } = req.body;
+        // Extract the property_id, check_in_date, check_out_date, number_guests from the request body
+        const { property_id, check_in_date, check_out_date, number_guests } = req.body;
 
         // Need to retrieve the user id (guest_id) who made the reservation from the token
         // Retrieving the user id (guest_id) who made the reservation from the token
@@ -64,6 +64,37 @@ exports.create = async (req, res) => {
 
         // Set the guest_id in the req.body object
         req.body.guest_id = guest_id;
+
+        // Set the booking_date in the req.body object
+        req.body.booking_date = new Date();
+
+        // Check if check-out date is greater than check-in date
+        if (new Date(check_out_date) <= new Date(check_in_date)) {
+            return res.status(400).json({
+                success: false,
+                msg: "Check-out date must be greater than check-in date."
+            });
+        }
+
+        // Fetch the property to check the allowed number of guests
+        const property = await db.property.findOne({ where: { property_id } });
+        
+        if (!property) {
+            return res.status(404).json({
+                success: false,
+                msg: "Property not found."
+            });
+        }
+
+        // Check if the number of guests allowed is greater or equal to the number of guests in the reservation
+        if (property.number_guests_allowed < number_guests) {
+            return res.status(400).json({
+                success: false,
+                msg: `The maximum number of guests allowed for this property is ${property.number_guests_allowed}.`
+            });
+        }
+
+        
 
         // Save the booking in the database
         let newBooking = await Booking.create(req.body);

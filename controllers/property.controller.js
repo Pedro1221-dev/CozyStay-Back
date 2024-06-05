@@ -1,4 +1,5 @@
 // Importing all the models
+const { log } = require("console");
 const db = require("../models/index.js");
 // Define a variable Property to represent the Property model in the database
 const Property = db.property;
@@ -10,7 +11,7 @@ const Property = db.property;
 //const Photo = db.photo;
 
 // Importing the uploadImage and destroy functions from the cloudinary utilities
-const { uploadImage, deleteImage }  = require('../utilities/cloudinary');
+const { uploadImage, deleteImage } = require('../utilities/cloudinary');
 
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError, Sequelize, where } = require('sequelize');
@@ -133,7 +134,7 @@ exports.findAll = async (req, res) => {
                 typology: selectedTypologies
             };
         }
-        
+
         // Add 'status' query parameter to search options if provided
         if (status) {
             searchOptions.where = {
@@ -143,26 +144,26 @@ exports.findAll = async (req, res) => {
         }
 
         // Add 'host_language' query parameter to search options if provided
-       /*  if (host_language) {
-            const selectedHostLanguages = host_language.split(',').map(lang => lang.trim());
-            searchOptions.include = [{
-                model: db.language,
-                where: {
-                    language: selectedHostLanguages
-                },
-            }];
-        } */
+        /*  if (host_language) {
+             const selectedHostLanguages = host_language.split(',').map(lang => lang.trim());
+             searchOptions.include = [{
+                 model: db.language,
+                 where: {
+                     language: selectedHostLanguages
+                 },
+             }];
+         } */
 
         // Add 'amenities' query parameter to search options if provided
-       /*  if (amenities) {
-            const selectedAmenities = amenities.split(',').map(lang => lang.trim());
-            searchOptions.include = [{
-                model: db.facility,
-                where: {
-                    facility: selectedAmenities
-                },
-            }];
-        } */
+        /*  if (amenities) {
+             const selectedAmenities = amenities.split(',').map(lang => lang.trim());
+             searchOptions.include = [{
+                 model: db.facility,
+                 where: {
+                     facility: selectedAmenities
+                 },
+             }];
+         } */
 
         // Initializing variables to store minimum price and maximum price
         /* let minAverageRating, maxAverageRating;
@@ -198,7 +199,7 @@ exports.findAll = async (req, res) => {
                 averageRating: averageRatingCondition
             };
         } */
-        
+
 
         // Add 'sort' query parameter to search options if provided
         if (sort === 'date') {
@@ -231,6 +232,19 @@ exports.findAll = async (req, res) => {
             status: 'available'
         }; */
 
+
+        //let hostLanguage = host_language ? host_language.split(',').map(lang => lang.trim()) : null;
+        // if (host_language) {
+        //     const selectedHostLanguages = host_language.split(',').map(lang => lang.trim());
+        //     searchOptions.include = [{
+        //         model: db.language,
+        //         where: {
+        //             language: selectedHostLanguages
+        //         },
+        //     }];
+        // }
+
+
         // Find properties with pagination and search options
         const properties = await Property.findAll({
             limit: limit,
@@ -238,32 +252,45 @@ exports.findAll = async (req, res) => {
             ...searchOptions,
             attributes: ["property_id", "city", "country", "title", "price", "number_bedrooms", "number_beds"],
             include: [
-                {
+                 {
                     model: db.photo,
                     as: 'photos',
                     attributes: ["url_photo"],
                 },
                 {
-                    model: db.booking, 
-                    as: 'rating', 
-                    attributes: ["number_stars"], 
+                    model: db.booking,
+                    as: 'rating',
+                    attributes: ["number_stars"],
                 },
+                /* {
+                    model: db.user,
+                    attributes: { exclude: ['password'] }, // Exclude the password attribute
+                    as: 'owner',
+                    include: [{
+                        model: db.language,
+                        as: 'language',
+                        where: {
+                            language: hostLanguage
+                        }
+                    }]
+                } */
             ],
         });
+        console.log("ANTES", properties.length);
 
         // Loop through each property to calculate totalStars and numValidRatings
         for (const property of properties) {
             /// Calculate the average rating
             let totalStars = 0;
             // Counter to track the number of valid ratings
-            let numValidRatings = 0; 
+            let numValidRatings = 0;
             for (const booking of property.rating) {
                 // Check if the number of stars is not null (review was done)
-                if (booking.number_stars !== null) { 
+                if (booking.number_stars !== null) {
                     // If not null, add the number of stars to the total
                     totalStars += booking.number_stars;
                     // Increment the counter for valid ratings
-                    numValidRatings++; 
+                    numValidRatings++;
                 }
             }
             // Calculate the average rating for each property
@@ -273,11 +300,15 @@ exports.findAll = async (req, res) => {
         }
 
         // Calculate the total number of properties after applying pagination
-        const totalProperties = await Property.count({
+        /* const totalProperties = await Property.count({
             where: {
                 ...searchOptions.where, // Merge existing search conditions
             }
-        });
+        }); */
+
+        
+        const totalProperties = properties.length;
+
         // Calculate the total number of pages based on the total number of properties and the limit per page
         const totalPages = Math.ceil(totalProperties / limit);
         // Previous and next page links
@@ -368,7 +399,7 @@ exports.findOne = async (req, res) => {
     try {
         // Initialize search options object
         const searchOptions = {};
-        
+
         // Extract sort and direction parameters from the request query
         const { sort, direction } = req.query;
 
@@ -414,7 +445,7 @@ exports.findOne = async (req, res) => {
                     as: 'rating',
                     attributes: ["check_in_date", "check_out_date", "number_stars", "comment", "rating_date"],
                     include: [
-                        { 
+                        {
                             model: db.user,
                             attributes: ["user_id", "name", "url_avatar", "nationality"],
                         }
@@ -467,23 +498,23 @@ exports.findOne = async (req, res) => {
         /// Calculate the average rating
         let totalStars = 0;
         // Counter to track the number of valid ratings
-        let numValidRatings = 0; 
+        let numValidRatings = 0;
 
         // Loop through each booking/rating in the property
         property.rating.forEach(booking => {
             // Check if the number of stars is not null (review was not done)
-            if (booking.number_stars !== null) { 
+            if (booking.number_stars !== null) {
                 // If not null, add the number of stars to the total
                 totalStars += booking.number_stars;
                 // Increment the counter for valid ratings
-                numValidRatings++; 
+                numValidRatings++;
             }
         });
 
         // Calculate the average rating
-        let averageRating = 0; 
+        let averageRating = 0;
 
-        if (numValidRatings) { 
+        if (numValidRatings) {
             averageRating = totalStars / numValidRatings;
         }
 
@@ -521,7 +552,7 @@ exports.findOne = async (req, res) => {
         // Attach the total reviews count to the owner object
         owner.dataValues.total_reviews = totalReviewsHost;
         // Attach the average rating to the owner object
-        owner.dataValues.userRating = averageRatingHost;  
+        owner.dataValues.userRating = averageRatingHost;
         // Attach the owner information to the property object
         property.dataValues.host = owner
 
@@ -559,7 +590,7 @@ exports.findOne = async (req, res) => {
 exports.delete = async (req, res) => {
     try {
         // Retrieve the user information from the token in the header
-        const loggedInUser = req.userData; 
+        const loggedInUser = req.userData;
 
         const property = await Property.findByPk(req.params.property_id);
 
@@ -567,7 +598,7 @@ exports.delete = async (req, res) => {
         const pendingBookings = await db.booking.findOne({
             where: {
                 property_id: req.params.property_id,
-                check_out_date: { [Op.gt]: new Date() } 
+                check_out_date: { [Op.gt]: new Date() }
             }
         });
 
@@ -578,13 +609,14 @@ exports.delete = async (req, res) => {
                 message: 'Unable to delete the property because there are pending bookings associated with it.'
             });
         }
-        
+
 
         // Check if the logged-in user is an admin or if they own the property
         if (loggedInUser.type !== 'admin' && loggedInUser.user_id !== property.owner_id) {
-            return res.status(403).json({ 
-                success: false, 
-                msg: "Unauthorized: You don't have permission to perform this action." });
+            return res.status(403).json({
+                success: false,
+                msg: "Unauthorized: You don't have permission to perform this action."
+            });
         }
 
         // Find all photos associated with the property ID
@@ -654,7 +686,7 @@ exports.update = async (req, res) => {
                 property_id: req.params.property_id
             }
         });
-        
+
 
         // Attempt to update the property with the provided data
         let affectedRows = await Property.update(
@@ -672,9 +704,9 @@ exports.update = async (req, res) => {
                     for (let photo of photos) {
                         // Delete the photo from the database
                         await db.photo.destroy({
-                            where: { photo_id: photo.photo_id } 
+                            where: { photo_id: photo.photo_id }
                         });
-        
+
                         // Delete the photo from Cloudinary
                         await deleteImage(photo.cloudinary_photo_id);
                     }
@@ -686,16 +718,16 @@ exports.update = async (req, res) => {
 
                     // Create a new photo record in the database
                     const newPhoto = await db.photo.create({
-                        property_id: req.params.property_id, 
+                        property_id: req.params.property_id,
                         url_photo: photoResult.secure_url,
                         cloudinary_photo_id: photoResult.public_id
                     });
 
-                    
+
                     // Increment the affectedRows count
-                    affectedRows ++
+                    affectedRows++
                 });
-        
+
                 // Wait for all photo upload operations to complete
                 await Promise.all(promises);
 
@@ -747,7 +779,7 @@ exports.update = async (req, res) => {
 exports.create = async (req, res) => {
     try {
         // Extracts the properties from the request body
-        const { owner_id, title, city, country, address, number_bedrooms, number_beds, number_bathrooms, number_guests_allowed, description, typology, price, facilities, payment_methods} = req.body;
+        const { owner_id, title, city, country, address, number_bedrooms, number_beds, number_bathrooms, number_guests_allowed, description, typology, price, facilities, payment_methods } = req.body;
 
         // Count the number of properties the user owns
         const propertyCount = await Property.count({
@@ -786,18 +818,18 @@ exports.create = async (req, res) => {
 
         // Save the property in the database
         let newProperty = await Property.create(
-            { 
-                owner_id, 
-                title, 
-                city, 
-                country, 
-                address, 
-                number_bedrooms, 
-                number_beds, 
-                number_bathrooms, 
-                number_guests_allowed, 
-                description, 
-                typology, 
+            {
+                owner_id,
+                title,
+                city,
+                country,
+                address,
+                number_bedrooms,
+                number_beds,
+                number_bathrooms,
+                number_guests_allowed,
+                description,
+                typology,
                 price
             });
 
@@ -830,7 +862,7 @@ exports.create = async (req, res) => {
             await db.seasonPrice.create({
                 property_id: newProperty.property_id,
                 start_date: req.body.start_date,
-                end_date:  req.body.end_date,
+                end_date: req.body.end_date,
                 addition: req.body.addition
             });
         }
@@ -904,7 +936,7 @@ exports.confirm = async (req, res) => {
         if (property.status === 'available') {
             return res.status(404).json({
                 success: false,
-                msg: "Property request already confirmed" 
+                msg: "Property request already confirmed"
             });
         }
 
@@ -917,7 +949,7 @@ exports.confirm = async (req, res) => {
         res.status(201).json({
             success: true,
             msg: "Property request confirmed", property,
-            
+
         });
     }
     catch (err) {

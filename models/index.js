@@ -108,6 +108,17 @@ db.user_password_token.belongsTo(db.user, {
     foreignKey: 'user_id',
 });
 
+// 1:N (USER - PROPERTY) 
+db.user.hasMany(db.property, {
+    as: 'properties',
+    foreignKey: 'owner_id', // Property's foreign key referencing User
+});
+
+db.property.belongsTo(db.user, {
+    as: 'owner',
+    foreignKey: 'owner_id', // Property's foreign key referencing User
+}); 
+
 // N:N (USER - LANGUAGE)
 db.user.belongsToMany(db.language, {
     through: 'user_language', 
@@ -183,6 +194,8 @@ db.property.belongsToMany(db.user, {
     foreignKey: 'property_id', // Foreign key in the favorite table that references the property table
     otherKey: 'user_id' // Foreign key in the favorite table that references the user table
 });
+
+
 
 
 // // optionally: SYNC
