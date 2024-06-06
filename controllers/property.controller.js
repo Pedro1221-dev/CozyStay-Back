@@ -143,16 +143,65 @@ exports.findAll = async (req, res) => {
             };
         }
 
-        // Add 'host_language' query parameter to search options if provided
-        /*  if (host_language) {
-             const selectedHostLanguages = host_language.split(',').map(lang => lang.trim());
-             searchOptions.include = [{
-                 model: db.language,
-                 where: {
-                     language: selectedHostLanguages
-                 },
-             }];
-         } */
+        
+
+        if (check_in_date && check_out_date) {
+            // Check if check-out date is greater than check-in date
+            if (new Date(check_out_date) <= new Date(check_in_date)) {
+                return res.status(400).json({
+                    success: false,
+                    msg: "Check-out date must be greater than check-in date."
+                });
+            }
+            
+            // Find all bookings that overlap with the given dates
+            const overlappingBookings = await db.booking.findAll({
+                where: {
+                    [Op.or]: [
+                        {
+                            // Case 1: New check-in date falls between existing booking's check-in and check-out dates
+                            check_in_date: {
+                                [Op.between]: [check_in_date, check_out_date]
+                            }
+                        },
+                        {
+                            // Case 2: New check-out date falls between existing booking's check-in and check-out dates
+                            check_out_date: {
+                                [Op.between]: [check_in_date, check_out_date]
+                            }
+                        },
+                        {
+                            // Case 3: New booking completely overlaps an existing booking
+                            [Op.and]: [
+                                {
+                                    check_in_date: {
+                                        [Op.lte]: check_in_date
+                                    }
+                                },
+                                {
+                                    check_out_date: {
+                                        [Op.gte]: check_out_date
+                                    }
+                                },
+                            ]
+                        }
+                    ]
+                },
+            });
+
+            // Get the property IDs of overlapping bookings
+            const overlappingPropertyIds = overlappingBookings.map(booking => booking.property_id);
+
+            // Add the exclusion condition to searchOptions
+            searchOptions.where = {
+                ...searchOptions.where,
+                property_id: {
+                    [Op.notIn]: overlappingPropertyIds
+                }
+            };
+        }
+
+        
 
         // Add 'amenities' query parameter to search options if provided
         /*  if (amenities) {
@@ -232,8 +281,10 @@ exports.findAll = async (req, res) => {
             status: 'available'
         }; */
 
+        //const languages = ['english', 'french', 'german', 'italian', 'mandarin', 'portuguese', 'russian', 'spanish']
+        //let hostLanguage = host_language ? host_language.split(',').map(lang => lang.trim()) : languages;
 
-        //let hostLanguage = host_language ? host_language.split(',').map(lang => lang.trim()) : null;
+        //console.log(hostLanguage);
         // if (host_language) {
         //     const selectedHostLanguages = host_language.split(',').map(lang => lang.trim());
         //     searchOptions.include = [{
@@ -273,7 +324,7 @@ exports.findAll = async (req, res) => {
                             language: hostLanguage
                         }
                     }]
-                } */
+                }  */
             ],
         });
 
@@ -298,6 +349,7 @@ exports.findAll = async (req, res) => {
             property.dataValues.averageRating = averageRating;
         }
 
+        //console.log(properties.length)
         // Calculate the total number of properties after applying pagination
         const totalProperties = await Property.count({
             where: {
