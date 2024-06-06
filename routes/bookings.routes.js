@@ -15,8 +15,8 @@ router.route('/:booking_id/rates')
     //.post( bookingsController.xxx ) // PROTECTED
 
 router.route('/:booking_id')
-    .get( bookingController.findOne )  // PROTECTED
-    .delete( bookingController.delete) // PROTECTED
+    .get( checkAuth, bookingController.findOne )  // PROTECTED
+    .delete( checkAuth, bookingController.delete) // PROTECTED
     
 router.route('/upcoming')
     //.get( bookingsController.xxx )  // PROTECTED

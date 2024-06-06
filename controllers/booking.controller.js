@@ -178,32 +178,70 @@ exports.create = async (req, res) => {
 */
 exports.delete = async (req, res) => {
     try {
-        // Attempt to delete the booking with the specified ID
-        let result = await Booking.destroy({ 
-            where: { booking_id: req.params.booking_id}
-        });
+        // Find the booking with the specified ID
+        const booking = await db.booking.findByPk(req.params.booking_id);
 
-
-        // Check if the booking was successfully deleted
-        if (result == 1) {
-            // Return a success message if the booking was found and deleted
-            return res.status(200).json({
-                success: true, 
-                msg: `Booking with id ${req.params.booking_id} was successfully deleted!`
+        // Check if the booking exists
+        if (!booking) {
+            // If the booking doesn't exist, return a 404 response
+            return res.status(404).json({
+                success: false,
+                msg: `Booking with ID ${req.params.booking_id} not found.`
             });
         }
 
-         // If the booking was not found, return a 404 response
-        return res.status(404).json({
-            success: false, 
-            msg: `Booking with ID ${req.params.booking_id} not found.`
-        });
-    }
-    catch (err) {
-         // If an error occurs, return a 500 response with an error message
+        // Calculate the difference between check-in date and current date in days
+        // Get the check-in date of the booking
+        const checkInDate = new Date(booking.check_in_date);
+        // Get the current date
+        const currentDate = new Date();
+        // Milliseconds in a day
+        const oneDay = 1000 * 60 * 60 * 24; 
+        // Calculate the difference in days
+        const differenceInDays = Math.floor((checkInDate.getTime() - currentDate.getTime()) / oneDay);
+        // Get the final price of the booking
+        const refundAmount = booking.final_price;
+
+        // Apply cancellation rules based on the difference in days
+        if (differenceInDays < 2) {
+            // Return a 400 response indicating cancellation is not allowed within 2 days of check-in
+            return res.status(400).json({
+                success: false,
+                msg: `The booking cannot be canceled within 2 days of check-in.`
+            });
+        } else if (differenceInDays <= 7) {
+            // Cancel the booking and return 50% refund
+            await db.booking.destroy({
+                where: { booking_id: req.params.booking_id }
+            });
+
+            // Return a 200 response indicating successful cancellation with 50% refund
+            return res.status(200).json({
+                success: true,
+                msg: `Booking with id ${req.params.booking_id} was canceled. 50% of the amount refunded.`,
+                refundAmount: refundAmount * 0.5
+            });
+        } else {
+            // Cancel the booking and return full refund
+            const result = await db.booking.destroy({
+                where: { booking_id: req.params.booking_id }
+            });
+
+            // Check if the booking was successfully deleted
+            if (result === 1) {
+                // Return a 200 response indicating successful cancellation with full refund
+                return res.status(200).json({
+                    success: true,
+                    msg: `Booking with id ${req.params.booking_id} was canceled. Full amount refunded.`,
+                    refundAmount: parseInt(refundAmount)
+                });
+            } 
+        }
+    } catch (err) {
+        // If an error occurs, return a 500 response with an error message
         res.status(500).json({
-            success: false, 
+            success: false,
             msg: `Error deleting booking with ID ${req.params.booking_id}.`
         });
-    };
+    }
 };
