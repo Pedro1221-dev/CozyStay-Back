@@ -1509,11 +1509,17 @@ exports.addFavorite = async (req, res) => {
         });
     }
     catch (err) {
-        // If an error occurs, return a 500 response with the error message
-        return res.status(500).json({
-            success: false, 
-            msg: err.message || "Some error occurred while adding property to the favorites."
-        });
+        // If a validation error occurs, return a 400 response with error messages
+        if (err instanceof ValidationError)
+            res.status(400).json({ 
+                success: false, 
+                msg: err.errors.map(e => e.message) });
+        else
+            // If an error occurs, return a 500 response with the error message
+            return res.status(500).json({
+                success: false, 
+                msg: err.message || "Some error occurred while adding property to the favorites."
+            });
     };
 };
 

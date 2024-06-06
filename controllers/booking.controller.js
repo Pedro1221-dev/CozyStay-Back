@@ -245,3 +245,76 @@ exports.delete = async (req, res) => {
         });
     }
 };
+
+/**
+ * 
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+*/
+exports.rateBooking = async (req, res) => {
+    try {
+        // Extract number_stars and comment from the request body
+        const { number_stars, comment} = req.body;
+
+        // Check if the booking exists
+        const booking = await db.booking.findByPk(req.params.booking_id);
+
+        // If the booking does not exist, return a 404 response
+        if (!booking) {
+            return res.status(404).json({
+                success: false,
+                msg: `Booking with ID ${req.params.booking_id} not found.`
+            });
+        }
+
+        // Get the check-out date of the booking and the current date
+        const checkoutDate = new Date(booking.check_out_date);
+        const currentDate = new Date();
+        
+        // Check if the check-out date is greater than the current date
+        if (checkoutDate > currentDate) {
+            // return a 400 response indicating that the booking cannot be rated until the check-out date
+            return res.status(400).json({
+                success: false,
+                msg: `The booking cannot be rated until the check-out date`
+            });
+        }
+
+        // Update the booking with the provided number of stars, comment, and current date as the rating date
+        await db.booking.update(
+            { 
+                number_stars: number_stars, 
+                comment: comment,
+                rating_date: new Date()
+            },
+            { 
+                where: 
+                    { 
+                        booking_id: req.params.booking_id 
+                    } 
+            }
+        );
+
+        // Return a success message if the booking is rated successfully
+        res.status(200).json({
+            success: true,
+            msg: `Booking with ID ${req.params.booking_id } rated successfully.`,
+        });
+
+
+    } catch (err) {
+        console.log(err);
+        // If a validation error occurs, return a 400 response with error messages
+        if (err instanceof ValidationError)
+            res.status(400).json({ 
+                success: false, 
+                msg: err.errors.map(e => e.message) });
+        else
+            // If an error occurs, return a 500 response with an error message
+            res.status(500).json({
+                success: false,
+                msg: `Error deleting booking with ID ${req.params.booking_id}.`
+            });
+    }
+};

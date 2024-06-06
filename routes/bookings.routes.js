@@ -11,8 +11,8 @@ const bookingController = require("../controllers/booking.controller");
 router.route('/')
     .post( checkAuth, bookingController.create ) // PROTECTED (user logged in)
 
-router.route('/:booking_id/rates')
-    //.post( bookingsController.xxx ) // PROTECTED
+router.route('/:booking_id/rate')
+    .post( checkAuth, bookingController.rateBooking) // PROTECTED
 
 router.route('/:booking_id')
     .get( checkAuth, bookingController.findOne )  // PROTECTED
