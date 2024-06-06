@@ -94,6 +94,51 @@ exports.create = async (req, res) => {
             });
         }
 
+        // Find conflicting bookings for the same property and overlapping dates
+        const conflictingBookings  = await db.booking.findOne({
+            where: {
+                property_id,
+                [Op.or]: [
+                    {
+                        // Case 1: New check-in date falls between existing booking's check-in and check-out dates
+                        check_in_date: {
+                            [Op.between]: [check_in_date, check_out_date]
+                        }
+                    },
+                    {
+                        // Case 2: New check-out date falls between existing booking's check-in and check-out dates
+                        check_out_date: {
+                            [Op.between]: [check_in_date, check_out_date]
+                        }
+                    },
+                    {   
+                        // Case 3: New booking completely overlaps an existing booking (check-in date before or equal to new check-in date
+                        // and check-out date after or equal to new check-out date)
+                        [Op.and]: [
+                            {
+                                check_in_date: {
+                                    [Op.lte]: check_in_date
+                                }
+                            },
+                            {
+                                check_out_date: {
+                                    [Op.gte]: check_out_date
+                                }
+                            },
+                        ]
+                    }
+                ]
+            }
+        })
+
+        // If there are conflicting bookings, return an error response
+        if (conflictingBookings) {
+            return res.status(400).json({
+                success: false,
+                msg: "The property is already booked for the selected dates."
+            });
+        }
+
         
 
         // Save the booking in the database
