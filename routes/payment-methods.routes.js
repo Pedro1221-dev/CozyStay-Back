@@ -10,7 +10,7 @@ const checkAuth = require('../middleware/check-auth');
 const paymentMethodsController = require("../controllers/payment-methods.controller");
 
 router.route('/')
-    .get( checkAuth, paymentMethodsController.findAll ) // PUBLIC
+    .get( checkAuth, paymentMethodsController.findAll ) // PROTECTED (user logged in)
 
 
 router.all('*', (req, res) => {

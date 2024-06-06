@@ -10,7 +10,7 @@ const checkAuth = require('../middleware/check-auth');
 const facilityController = require("../controllers/facility.controller");
 
 router.route('/')
-    .get( checkAuth, facilityController.findAll ) // PUBLIC
+    .get( checkAuth, facilityController.findAll ) // PROTECTED (user logged in)
 
 
 router.all('*', (req, res) => {
