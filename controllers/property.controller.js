@@ -276,7 +276,6 @@ exports.findAll = async (req, res) => {
                 } */
             ],
         });
-        console.log("ANTES", properties.length);
 
         // Loop through each property to calculate totalStars and numValidRatings
         for (const property of properties) {
@@ -300,14 +299,11 @@ exports.findAll = async (req, res) => {
         }
 
         // Calculate the total number of properties after applying pagination
-        /* const totalProperties = await Property.count({
+        const totalProperties = await Property.count({
             where: {
                 ...searchOptions.where, // Merge existing search conditions
             }
-        }); */
-
-        
-        const totalProperties = properties.length;
+        });  
 
         // Calculate the total number of pages based on the total number of properties and the limit per page
         const totalPages = Math.ceil(totalProperties / limit);
@@ -959,6 +955,54 @@ exports.confirm = async (req, res) => {
             msg: err.message || "Some error occurred while confirming the property."
         });
     };
+};
+
+/**
+ * Find season price for a specific property.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.findOneSeasonPrice = async (req, res) => {
+    try {
+        // Find the property by ID
+        const property = await db.property.findByPk(req.params.property_id);
+
+        // If property is not found, return a 404 error response
+        if (!property) {
+            return res.status(404).json({
+                success: false,
+                msg: `Property with ID ${req.params.property_id} not found.`
+            });
+        }
+
+        // Find season price of the property
+        const seasonPrice = await db.seasonPrice.findOne({
+            where: { property_id: property.property_id }
+        });
+
+        // If season price is not found, return a 404 error response
+        if (!seasonPrice) {
+            return res.status(404).json({
+                success: false,
+                msg: `Property with ID ${property.property_id} has no season price.`
+            });
+        }
+
+        // Return the season price along with the property details
+        res.status(200).json({
+            success: true,
+            msg: `Season price found for property with ID ${property.property_id}`,
+            season_price: seasonPrice
+        });
+
+    } catch (err) {
+        // If an error occurs, return a 500 response with an error message
+        res.status(500).json({
+            success: false,
+            msg: err.message || "Some error occurred while finding the season price."
+        });
+    }
 };
 
 
