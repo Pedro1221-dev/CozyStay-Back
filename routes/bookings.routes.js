@@ -12,11 +12,14 @@ router.route('/')
     .post( checkAuth, bookingController.create ) // PROTECTED (user logged in)
 
 router.route('/:booking_id/rate')
-    .post( checkAuth, bookingController.rateBooking) // PROTECTED
+    .post( checkAuth, bookingController.rateBooking) // PROTECTED (user logged in)
 
 router.route('/:booking_id')
-    .get( checkAuth, bookingController.findOne )  // PROTECTED
-    .delete( checkAuth, bookingController.delete) // PROTECTED
+    .get( checkAuth, bookingController.findOne )  // PROTECTED (user logged in)
+    .delete( checkAuth, bookingController.delete) // PROTECTED (user logged in)
+
+router.route('/send-invoice')
+    .post(checkAuth, bookingController.sendInvoice) // PROTECTED (user logged in)
     
 router.route('/upcoming')
     //.get( bookingsController.xxx )  // PROTECTED
