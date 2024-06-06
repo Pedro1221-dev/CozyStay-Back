@@ -6,6 +6,31 @@ const Booking = db.booking;
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
 
+// Importing the nodemailer library
+const nodemailer = require("nodemailer");
+// Import PDFKit for generating PDFs
+const PDFDocument = require('pdfkit');
+// Import the filesystem module
+const fs = require('fs');
+// Import the operating system module
+const os = require('os');
+// Import the path module for handling file paths
+const path = require('path');
+// Import Axios for making HTTP requests
+const axios = require('axios'); 
+
+// Nodemailer Stuff
+let transporter = nodemailer.createTransport({
+    host: 'smtp.outlook.com',
+    port: 587,
+    secure: false, 
+    auth: {
+        user: process.env.AUTH_EMAIL, 
+        pass: process.env.AUTH_PASS, 
+    }
+});
+
+
 /**
  * Retrieves a booking by their ID.
  * 
@@ -247,7 +272,7 @@ exports.delete = async (req, res) => {
 };
 
 /**
- * 
+ * Rate a specified booking
  * 
  * @param {Object} req - The request object.
  * @param {Object} res - The response object.
@@ -304,7 +329,6 @@ exports.rateBooking = async (req, res) => {
 
 
     } catch (err) {
-        console.log(err);
         // If a validation error occurs, return a 400 response with error messages
         if (err instanceof ValidationError)
             res.status(400).json({ 
@@ -318,3 +342,313 @@ exports.rateBooking = async (req, res) => {
             });
     }
 };
+
+/**
+ * Sends an invoice for a booking via email.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ */
+exports.sendInvoice = async (req, res) => {
+    try {
+        // Fetch the booking details from the database including associated user and property
+        const booking = await db.booking.findByPk(req.body.booking_id, {
+            include: [
+                {
+                    model: db.user,
+                    attributes: ['name', 'email']
+                },
+                {
+                    model: db.property,
+                    attributes: ['title', 'address', 'description', 'typology', 'city', 'country']
+                }
+            ]
+        });
+        
+        // If booking not found, return a 404 response
+        if (!booking) {
+            return res.status(404).json({
+                success: false,
+                msg: `Booking with ID ${req.body.booking_id} not found.`
+            });
+        }
+
+        // Calculate the number of nights
+        const checkInDate = new Date(booking.check_in_date);
+        const checkOutDate = new Date(booking.check_out_date);
+        const oneDay = 1000 * 60 * 60 * 24; 
+        const nightsDifference = Math.floor((checkOutDate.getTime() - checkInDate.getTime()) / oneDay);
+        const nightsText = nightsDifference > 1 ? 'nights' : 'night';
+        const nights = `${nightsDifference} ${nightsText}`;
+
+
+        // Format the booking date
+        const bookingDate = new Date(booking.booking_date);
+        const options = { weekday: 'long', month: 'long', day: '2-digit', year: 'numeric' };
+        const formattedDate = bookingDate.toLocaleDateString('en-US', options);
+
+        // Format the check-in date
+        const options1 = { month: 'long', day: '2-digit', year: 'numeric' };
+        const formattedCheckIndate = checkInDate.toLocaleDateString('en-US', options1)
+
+        // Format the check-out date
+        const options2 = { month: 'long', day: '2-digit', year: 'numeric' };
+        const formattedCheckOutdate = checkOutDate.toLocaleDateString('en-US', options2)
+
+        
+        // Create a temporary file path
+        const tempDir = os.tmpdir();
+        const tempFilePath = path.join(tempDir, `invoice_${req.body.booking_id}.pdf`);
+        
+        // Create a new PDF document
+        const doc = new PDFDocument();
+        const pdfStream = fs.createWriteStream(tempFilePath);
+        doc.pipe(pdfStream);
+        
+        // Fetch the logo image
+        const response = await axios.get('https://res.cloudinary.com/dc8ckrwlq/image/upload/v1717701427/logo/logo_gmail_wwgkzs.png', { responseType: 'arraybuffer' });
+
+        // Add the logo image to the document
+        doc.image(response.data, { width: 50, height: 50,  align: 'left' }  ); 
+        doc.fontSize(12).font('Helvetica-Bold').text(`Cozy Stay`, { align: 'right' });
+        doc.fontSize(12).font('Helvetica').text(`Escola Superior de Media Artes e Design - Politécnico do Porto`, { align: 'right'});
+        doc.fontSize(12).font('Helvetica').text(`R. Dom Sancho I 1, Argivai`, { align: 'right' });
+        doc.fontSize(12).font('Helvetica').text(`Portugal`, { align: 'right' })
+
+        // Draw a gray line
+        doc
+            .moveTo(50, 150) // Starting point
+            .lineTo(550, 150) // Ending point
+            .lineWidth(1) // Line width
+            .strokeColor('#CCCCCC') // Line color
+            .stroke(); // Draw the line
+
+        // Add confirmed booking details
+        doc
+            .fontSize(20)
+            .font('Helvetica-Bold')
+            .text(`Confirmed: ${nights} in ${booking.Property.dataValues.city}, ${booking.Property.dataValues.country}`, 50, 180, { align: 'left' });
+        
+        // Add booking user details
+        doc
+            .fontSize(12)
+            .font('Helvetica')
+            .text('Booked by ', 50, 220, { continued: true })
+            .font('Helvetica-Bold')
+            .text(booking.User.dataValues.name);
+
+        // Add booking date
+        doc 
+            .fontSize(10)
+            .font('Helvetica')
+            .text(formattedDate, 50, 240, { align: 'left' })
+
+        // Add booking status
+        doc 
+            .fontSize(12)
+            .font('Helvetica-Bold')
+            .text('Accepted', 50, 220, { align: 'right' })
+
+        // Add booking ID
+        doc 
+            .fontSize(10)
+            .font('Helvetica')
+            .text(booking.booking_id, 50, 240, { align: 'right' })
+
+        // Add rectangle for check-in and check-out dates
+        doc
+            .rect(
+                50, // x
+                290, // y
+                250, // width
+                300 // height
+            )
+            .strokeColor('#CCCCCC')
+            .stroke();
+
+        // Add check-in date
+        doc 
+            .fontSize(10)
+            .font('Helvetica-Bold')
+            .text('Check In', 70, 300, { align: 'left' })
+
+        doc 
+            .fontSize(12)
+            .font('Helvetica-Bold')
+            .text(formattedCheckIndate, 70, 310, { align: 'left' })
+
+        // Add arrow symbol
+        doc 
+            .fontSize(20)
+            .font('Helvetica')
+            .text('>', 170, 305, { align: 'left' })
+
+        // Add check-out date
+        doc 
+            .fontSize(10)
+            .font('Helvetica-Bold')
+            .text('Check Out', 210, 300, { align: 'left' })
+
+        doc 
+            .fontSize(12)
+            .font('Helvetica-Bold')
+            .text(formattedCheckOutdate, 210, 310, { align: 'left' })
+
+        // Add line separator
+        doc
+            .moveTo(70, 330) // Starting point
+            .lineTo(290, 330) // Ending point
+            .lineWidth(1) // Line width
+            .strokeColor('#CCCCCC') // Line color
+            .stroke(); // Draw the line
+
+        // Add property details
+        doc 
+            .fontSize(14)
+            .font('Helvetica-Bold')
+            .text(`${booking.Property.dataValues.title}`, 70, 360, { align: 'left' })
+
+        doc 
+            .fontSize(12)
+            .font('Helvetica')
+            .text(`${booking.Property.dataValues.address}`, 70, 380, { align: 'left' })
+
+        doc 
+            .fontSize(12)
+            .font('Helvetica')
+            .text(`${booking.Property.dataValues.typology}`, 70, 400, { align: 'left' })
+        
+        doc 
+            .fontSize(12)
+            .font('Helvetica')
+            .text(`${booking.Property.dataValues.description}`, 70, 420, { align: 'left' })
+
+        doc 
+            .fontSize(12)
+            .font('Helvetica')
+            .text(`${booking.Property.dataValues.city},`, 70, 440, { align: 'left' })
+
+        doc 
+            .fontSize(12)
+            .font('Helvetica')
+            .text(`${booking.Property.dataValues.country}`, 70, 460, { align: 'left' })
+        
+        doc
+            .moveTo(70, 500) // Starting point
+            .lineTo(290, 500) // Ending point
+            .lineWidth(1) // Line width
+            .strokeColor('#CCCCCC') // Line color
+            .stroke(); // Draw the line
+        
+        doc 
+            .fontSize(14)
+            .font('Helvetica-Bold')
+            .text(`${booking.number_guests} Travelers on this trip`, 70, 530, { align: 'left' })
+
+        doc
+            .rect(
+                325, // x
+                280, // y
+                225, // width
+                140 // height
+            )
+            .strokeColor('#CCCCCC')
+            .stroke();
+        
+        doc
+            .rect(
+                325, // x
+                440, // y
+                225, // width
+                140 // height
+            )
+            .strokeColor('#CCCCCC')
+            .stroke();
+        
+        // Draw a gray line
+        doc
+            .moveTo(50, 620) // Starting point
+            .lineTo(550, 620) // Ending point
+            .lineWidth(1) // Line width
+            .strokeColor('#CCCCCC') // Line color
+            .stroke(); // Draw the line
+        
+        // "Need Help?" text
+        doc 
+            .fontSize(12)
+            .font('Helvetica-Bold')
+            .text('Need Help?', 50, 640, { align: 'left' })
+
+        // "Accepted" text
+        doc 
+            .fontSize(12)
+            .font('Helvetica-Bold')
+            .text('Accepted', 50, 640, { align: 'right' })
+
+        // Booking ID
+        doc 
+            .fontSize(10)
+            .font('Helvetica')
+            .text(booking.booking_id, 50, 660, { align: 'right' })
+
+        
+        // End the PDF document generation
+        doc.end();
+
+        // Listen for the 'finish' event of the PDF stream, then sends an email with the generated invoice attached.
+        pdfStream.on('finish', async () => {
+            // Construct email options
+            const mailOptions = {
+                from: process.env.AUTH_EMAIL,
+                to: booking.User.dataValues.email,
+                subject: 'Your Booking Invoice',
+                text: `Dear ${booking.User.dataValues.name},\n\nPlease find attached your booking invoice for the reservation ID ${req.body.booking_id}. If you have any questions or need further assistance, feel free to contact us.\n\nBest regards,\nThe Cozy Stay Team`,
+                attachments: [
+                    {
+                        filename: `invoice_${req.body.booking_id}.pdf`,
+                        path: tempFilePath
+                    }
+                ]
+            };
+
+            try {
+                // Attempt to send the email
+                await transporter.sendMail(mailOptions);
+
+                // If successful, send a success response
+                res.status(200).json({
+                    success: true,
+                    msg: `Invoice for booking with ID ${req.body.booking_id} sent successfully.`
+                });
+
+                // Delete the temporary PDF file
+                fs.unlink(tempFilePath, (err) => {
+                    if (err) console.error(`Error deleting temporary file: ${err}`);
+                });
+            } catch (emailError) {
+                // If sending email fails, send an error response
+                res.status(500).json({
+                    success: false,
+                    msg: `Error sending the invoice for the booking with ID ${req.body.booking_id}.`
+                });
+
+                // Delete the temporary PDF file
+                fs.unlink(tempFilePath, (err) => {
+                    if (err) console.error(`Error deleting temporary file: ${err}`);
+                });
+            }
+        });
+    } catch (error) {
+        // If a validation error occurs, return a 400 response with error messages
+        if (err instanceof ValidationError)
+            res.status(400).json({ 
+                success: false, 
+                msg: err.errors.map(e => e.message) });
+        else
+            // If an error occurs, return a 500 response with an error message
+            res.status(500).json({
+                success: false,
+                msg: `Error sending the invoice for the booking with ID ${req.body.booking_id}.`
+            });
+    }
+}
