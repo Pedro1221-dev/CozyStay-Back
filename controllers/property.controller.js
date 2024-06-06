@@ -139,7 +139,13 @@ exports.findAll = async (req, res) => {
         if (status) {
             searchOptions.where = {
                 ...searchOptions.where,
-                status: status ? status : 'available'
+                status: status
+            };
+        } else {
+            // Define default value if status is not provided
+            searchOptions.where = {
+                ...searchOptions.where,
+                status: 'available'
             };
         }
 
@@ -153,7 +159,7 @@ exports.findAll = async (req, res) => {
                     msg: "Check-out date must be greater than check-in date."
                 });
             }
-            
+
             // Find all bookings that overlap with the given dates
             const overlappingBookings = await db.booking.findAll({
                 where: {
@@ -275,12 +281,6 @@ exports.findAll = async (req, res) => {
             return res.status(400).json({ message: "Page must be 1 or a positive integer" });
         }
 
-        // Merge the existing 'where' conditions with the status atribute (return only available properties)
-        /* searchOptions.where = {
-            ...searchOptions.where,
-            status: 'available'
-        }; */
-
         //const languages = ['english', 'french', 'german', 'italian', 'mandarin', 'portuguese', 'russian', 'spanish']
         //let hostLanguage = host_language ? host_language.split(',').map(lang => lang.trim()) : languages;
 
@@ -349,7 +349,6 @@ exports.findAll = async (req, res) => {
             property.dataValues.averageRating = averageRating;
         }
 
-        //console.log(properties.length)
         // Calculate the total number of properties after applying pagination
         const totalProperties = await Property.count({
             where: {
