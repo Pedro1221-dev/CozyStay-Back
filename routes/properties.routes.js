@@ -21,6 +21,9 @@ router.route('/:property_id')
     .patch( checkAuth, upload.array('photos', { minCount: 1, maxCount: 5 }), propertyController.update ) // PROTECTED (user logged in)
     .delete( checkAuth, propertyController.delete) // PROTECTED (user logged in)
 
+router.route('/season-price/:property_id')
+    .get( propertyController.findOneSeasonPrice )  // PUBLIC
+
 router.route('/:property_id/confirm')
     .patch( checkAuth, checkAdmin, propertyController.confirm ) // PROTECTED (admin logged in)
 
