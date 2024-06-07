@@ -6,6 +6,9 @@ const Booking = db.booking;
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
 
+// Importing the uploadImage and destroy functions from the cloudinary utilities
+const { uploadImage, deleteImage } = require('../utilities/cloudinary');
+
 // Importing the nodemailer library
 const nodemailer = require("nodemailer");
 // Import PDFKit for generating PDFs
@@ -235,6 +238,9 @@ exports.delete = async (req, res) => {
                 msg: `The booking cannot be canceled within 2 days of check-in.`
             });
         } else if (differenceInDays <= 7) {
+            // Delete the invoice
+            await deleteImage(booking.cloudinary_invoice_id)
+
             // Cancel the booking and return 50% refund
             await db.booking.destroy({
                 where: { booking_id: req.params.booking_id }
@@ -247,6 +253,8 @@ exports.delete = async (req, res) => {
                 refundAmount: refundAmount * 0.5
             });
         } else {
+            // Delete the invoice
+            await deleteImage(booking.cloudinary_invoice_id)
             // Cancel the booking and return full refund
             const result = await db.booking.destroy({
                 where: { booking_id: req.params.booking_id }
@@ -364,6 +372,8 @@ exports.sendInvoice = async (req, res) => {
                 }
             ]
         });
+
+        const paymentMethod = await db.paymentMethod.findByPk(booking.payment_method_id)
         
         // If booking not found, return a 404 response
         if (!booking) {
@@ -381,7 +391,7 @@ exports.sendInvoice = async (req, res) => {
         const nightsText = nightsDifference > 1 ? 'nights' : 'night';
         const nights = `${nightsDifference} ${nightsText}`;
 
-
+        
         // Format the booking date
         const bookingDate = new Date(booking.booking_date);
         const options = { weekday: 'long', month: 'long', day: '2-digit', year: 'numeric' };
@@ -395,7 +405,10 @@ exports.sendInvoice = async (req, res) => {
         const options2 = { month: 'long', day: '2-digit', year: 'numeric' };
         const formattedCheckOutdate = checkOutDate.toLocaleDateString('en-US', options2)
 
-        
+        // Format the booking date
+        const options3 = { weekday: 'short', month: 'long', day: '2-digit', year: 'numeric' };
+        const formattedBookingDate = bookingDate.toLocaleDateString('en-US', options3)
+
         // Create a temporary file path
         const tempDir = os.tmpdir();
         const tempFilePath = path.join(tempDir, `invoice_${req.body.booking_id}.pdf`);
@@ -453,13 +466,13 @@ exports.sendInvoice = async (req, res) => {
         doc 
             .fontSize(10)
             .font('Helvetica')
-            .text(booking.booking_id, 50, 240, { align: 'right' })
+            .text(`ID: ${booking.booking_id}`, 50, 235, { align: 'right' })
 
         // Add rectangle for check-in and check-out dates
         doc
             .rect(
                 50, // x
-                290, // y
+                280, // y
                 250, // width
                 300 // height
             )
@@ -496,8 +509,8 @@ exports.sendInvoice = async (req, res) => {
 
         // Add line separator
         doc
-            .moveTo(70, 330) // Starting point
-            .lineTo(290, 330) // Ending point
+            .moveTo(70, 340) // Starting point
+            .lineTo(290, 340) // Ending point
             .lineWidth(1) // Line width
             .strokeColor('#CCCCCC') // Line color
             .stroke(); // Draw the line
@@ -555,6 +568,41 @@ exports.sendInvoice = async (req, res) => {
             .strokeColor('#CCCCCC')
             .stroke();
         
+        doc 
+            .fontSize(16)
+            .font('Helvetica-Bold')
+            .text(`Charges`, 340, 300, { align: 'left' })
+
+        doc 
+            .fontSize(12)
+            .font('Helvetica')
+            .text(`${booking.final_price / nightsDifference} x ${nights}`, 340, 330, { align: 'left' })
+
+        doc 
+            .fontSize(12)
+            .font('Helvetica')
+            .text(`${booking.final_price}`, 470, 330, { align: 'right' })
+        
+        doc 
+            .fontSize(12)
+            .font('Helvetica')
+            .text(`Service fee`, 340, 360, { align: 'left' })
+
+        doc 
+            .fontSize(12)
+            .font('Helvetica')
+            .text(`${booking.final_price * 0.1}`, 470, 360, { align: 'right' })
+        
+        doc 
+            .fontSize(12)
+            .font('Helvetica-Bold')
+            .text(`Total`, 340, 390, { align: 'left' })
+
+        doc 
+            .fontSize(14)
+            .font('Helvetica-Bold')
+            .text(`${(booking.final_price * 1.1).toFixed(2)}`, 470, 390, { align: 'right' })
+        
         doc
             .rect(
                 325, // x
@@ -565,10 +613,57 @@ exports.sendInvoice = async (req, res) => {
             .strokeColor('#CCCCCC')
             .stroke();
         
+        doc 
+            .fontSize(16)
+            .font('Helvetica-Bold')
+            .text(`Payment`, 340, 460, { align: 'left' })
+        
+        doc 
+            .fontSize(12)
+            .font('Helvetica')
+            .text(`Paid with ${paymentMethod.description}`, 340, 490, { align: 'left' })
+
+        doc 
+            .fontSize(8)
+            .font('Helvetica')
+            .text(`${formattedBookingDate}`, 340, 505, { align: 'left' })
+
+        doc 
+            .fontSize(12)
+            .font('Helvetica')
+            .text(`${(booking.final_price * 1.1).toFixed(2)}`, 470, 490, { align: 'right' })
+
+        doc 
+            .fontSize(14)
+            .font('Helvetica-Bold')
+            .text(`Total paid`, 340, 540, { align: 'left' })
+
+        doc 
+            .fontSize(14)
+            .font('Helvetica-Bold')
+            .text(`${(booking.final_price * 1.1).toFixed(2)}`, 470, 540, { align: 'right' })
+        
+        doc
+            .fontSize(10)
+            .font('Helvetica-Bold')
+            .text('Cost per traveler ', 50, 595, )
+
+        doc
+            .fontSize(10)
+            .font('Helvetica')
+            .text('This trip was', 50, 610, { continued: true })
+            .font('Helvetica-Bold')
+            .text(` ${(booking.final_price * 1.1 / (booking.number_guests * nightsDifference)).toFixed(2)}`, { continued: true })
+            .font('Helvetica')
+            .text(' per person, per night,')
+            .moveDown(0.2)
+            .font('Helvetica')
+            .text('including taxes and other fees.')
+  
         // Draw a gray line
         doc
-            .moveTo(50, 620) // Starting point
-            .lineTo(550, 620) // Ending point
+            .moveTo(50, 650) // Starting point
+            .lineTo(550, 650) // Ending point
             .lineWidth(1) // Line width
             .strokeColor('#CCCCCC') // Line color
             .stroke(); // Draw the line
@@ -577,19 +672,19 @@ exports.sendInvoice = async (req, res) => {
         doc 
             .fontSize(12)
             .font('Helvetica-Bold')
-            .text('Need Help?', 50, 640, { align: 'left' })
+            .text('Need Help?', 50, 670, { align: 'left' })
 
         // "Accepted" text
         doc 
             .fontSize(12)
             .font('Helvetica-Bold')
-            .text('Accepted', 50, 640, { align: 'right' })
+            .text('Accepted', 50, 670, { align: 'right' })
 
         // Booking ID
         doc 
             .fontSize(10)
             .font('Helvetica')
-            .text(booking.booking_id, 50, 660, { align: 'right' })
+            .text(`ID: ${booking.booking_id}`, 50, 685, { align: 'right' })
 
         
         // End the PDF document generation
@@ -621,6 +716,27 @@ exports.sendInvoice = async (req, res) => {
                     msg: `Invoice for booking with ID ${req.body.booking_id} sent successfully.`
                 });
 
+                // Upload the PDF to Cloudinary
+                const pdfBuffer = fs.readFileSync(tempFilePath);
+                const cloudinaryResult = await uploadImage(
+                    {
+                        buffer: pdfBuffer,
+                        mimetype: 'application/pdf'
+                    },
+                    'invoices'
+                );
+
+                // Update the booking record with Cloudinary details
+                await db.booking.update(
+                    { 
+                        invoice: cloudinaryResult.secure_url,
+                        cloudinary_invoice_id: cloudinaryResult.public_id
+                    },
+                    {
+                        where: { booking_id: req.body.booking_id }
+                    }
+                );
+
                 // Delete the temporary PDF file
                 fs.unlink(tempFilePath, (err) => {
                     if (err) console.error(`Error deleting temporary file: ${err}`);
@@ -638,7 +754,7 @@ exports.sendInvoice = async (req, res) => {
                 });
             }
         });
-    } catch (error) {
+    } catch (err) {
         // If a validation error occurs, return a 400 response with error messages
         if (err instanceof ValidationError)
             res.status(400).json({ 
