@@ -20,6 +20,9 @@ router.route('/:booking_id')
 
 router.route('/send-invoice')
     .post(checkAuth, bookingController.sendInvoice) // PROTECTED (user logged in)
+
+router.route('/download-invoice')
+    .post(checkAuth, bookingController.downloadInvoice) // PROTECTED (user logged in)
     
 router.route('/upcoming')
     //.get( bookingsController.xxx )  // PROTECTED
