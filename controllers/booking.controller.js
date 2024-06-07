@@ -352,6 +352,296 @@ exports.rateBooking = async (req, res) => {
 };
 
 /**
+ * Generates an invoice PDF document based on the provided booking details.
+ * 
+ * @param {Object} booking - Details of the booking.
+ * @param {Object} paymentMethod - Payment method used for the booking.
+ * @param {number} nightsDifference - Difference in nights for the booking.
+ * @param {number} nights - Number of nights for the booking.
+ * @param {string} formattedDate - Formatted date of the booking.
+ * @param {string} formattedCheckIndate - Formatted check-in date.
+ * @param {string} formattedCheckOutdate - Formatted check-out date.
+ * @param {string} formattedBookingDate - Formatted booking date.
+ * @param {string} tempFilePath - Temporary file path.
+ * @param {Object} doc - PDF document instance.
+ * @returns {void}
+ * @description This function takes in various details of a booking, including the booking details, payment method, dates, and document instance, and generates an invoice PDF document accordingly. It uses the provided data to populate the invoice with relevant information such as booking details, property information, charges, and payment details. The generated PDF document is then saved at the specified temporary file path.
+ */
+async function generateInvoicePDF(booking, paymentMethod, nightsDifference, nights, formattedDate, formattedCheckIndate, formattedCheckOutdate, formattedBookingDate, tempFilePath, doc) {
+    // Fetch the logo image
+    const response = await axios.get('https://res.cloudinary.com/dc8ckrwlq/image/upload/v1717701427/logo/logo_gmail_wwgkzs.png', { responseType: 'arraybuffer' });
+
+    // Add the logo image to the document
+    doc.image(response.data, { width: 50, height: 50,  align: 'left' }  ); 
+    doc.fontSize(12).font('Helvetica-Bold').text(`Cozy Stay`, { align: 'right' });
+    doc.fontSize(12).font('Helvetica').text(`Escola Superior de Media Artes e Design - Politécnico do Porto`, { align: 'right'});
+    doc.fontSize(12).font('Helvetica').text(`R. Dom Sancho I 1, Argivai`, { align: 'right' });
+    doc.fontSize(12).font('Helvetica').text(`Portugal`, { align: 'right' })
+
+    // Draw a gray line
+    doc
+        .moveTo(50, 150) // Starting point
+        .lineTo(550, 150) // Ending point
+        .lineWidth(1) // Line width
+        .strokeColor('#CCCCCC') // Line color
+        .stroke(); // Draw the line
+
+    // Add confirmed booking details
+    doc
+        .fontSize(20)
+        .font('Helvetica-Bold')
+        .text(`Confirmed: ${nights} in ${booking.Property.dataValues.city}, ${booking.Property.dataValues.country}`, 50, 180, { align: 'left' });
+    
+    // Add booking user details
+    doc
+        .fontSize(12)
+        .font('Helvetica')
+        .text('Booked by ', 50, 220, { continued: true })
+        .font('Helvetica-Bold')
+        .text(booking.User.dataValues.name);
+
+    // Add booking date
+    doc 
+        .fontSize(10)
+        .font('Helvetica')
+        .text(formattedDate, 50, 240, { align: 'left' })
+
+    // Add booking status
+    doc 
+        .fontSize(12)
+        .font('Helvetica-Bold')
+        .text('Accepted', 50, 220, { align: 'right' })
+
+    // Add booking ID
+    doc 
+        .fontSize(10)
+        .font('Helvetica')
+        .text(`ID: ${booking.booking_id}`, 50, 235, { align: 'right' })
+
+    // Add rectangle for check-in and check-out dates
+    doc
+        .rect(
+            50, // x
+            280, // y
+            250, // width
+            300 // height
+        )
+        .strokeColor('#CCCCCC')
+        .stroke();
+
+    // Add check-in date
+    doc 
+        .fontSize(10)
+        .font('Helvetica-Bold')
+        .text('Check In', 70, 300, { align: 'left' })
+
+    doc 
+        .fontSize(12)
+        .font('Helvetica-Bold')
+        .text(formattedCheckIndate, 70, 310, { align: 'left' })
+
+    // Add arrow symbol
+    doc 
+        .fontSize(20)
+        .font('Helvetica')
+        .text('>', 170, 305, { align: 'left' })
+
+    // Add check-out date
+    doc 
+        .fontSize(10)
+        .font('Helvetica-Bold')
+        .text('Check Out', 210, 300, { align: 'left' })
+
+    doc 
+        .fontSize(12)
+        .font('Helvetica-Bold')
+        .text(formattedCheckOutdate, 210, 310, { align: 'left' })
+
+    // Add line separator
+    doc
+        .moveTo(70, 340) // Starting point
+        .lineTo(290, 340) // Ending point
+        .lineWidth(1) // Line width
+        .strokeColor('#CCCCCC') // Line color
+        .stroke(); // Draw the line
+
+    // Add property details
+    doc 
+        .fontSize(14)
+        .font('Helvetica-Bold')
+        .text(`${booking.Property.dataValues.title}`, 70, 360, { align: 'left' })
+
+    doc 
+        .fontSize(12)
+        .font('Helvetica')
+        .text(`${booking.Property.dataValues.address}`, 70, 380, { align: 'left' })
+
+    doc 
+        .fontSize(12)
+        .font('Helvetica')
+        .text(`${booking.Property.dataValues.typology}`, 70, 400, { align: 'left' })
+    
+    doc 
+        .fontSize(12)
+        .font('Helvetica')
+        .text(`${booking.Property.dataValues.description}`, 70, 420, { align: 'left' })
+
+    doc 
+        .fontSize(12)
+        .font('Helvetica')
+        .text(`${booking.Property.dataValues.city},`, 70, 440, { align: 'left' })
+
+    doc 
+        .fontSize(12)
+        .font('Helvetica')
+        .text(`${booking.Property.dataValues.country}`, 70, 460, { align: 'left' })
+    
+    doc
+        .moveTo(70, 500) // Starting point
+        .lineTo(290, 500) // Ending point
+        .lineWidth(1) // Line width
+        .strokeColor('#CCCCCC') // Line color
+        .stroke(); // Draw the line
+    
+    doc 
+        .fontSize(14)
+        .font('Helvetica-Bold')
+        .text(`${booking.number_guests} Travelers on this trip`, 70, 530, { align: 'left' })
+
+    doc
+        .rect(
+            325, // x
+            280, // y
+            225, // width
+            140 // height
+        )
+        .strokeColor('#CCCCCC')
+        .stroke();
+    
+    doc 
+        .fontSize(16)
+        .font('Helvetica-Bold')
+        .text(`Charges`, 340, 300, { align: 'left' })
+
+    doc 
+        .fontSize(12)
+        .font('Helvetica')
+        .text(`${(booking.final_price / nightsDifference).toFixed(2)} x ${nights}`, 340, 330, { align: 'left' })
+
+    doc 
+        .fontSize(12)
+        .font('Helvetica')
+        .text(`${booking.final_price}`, 470, 330, { align: 'right' })
+    
+    doc 
+        .fontSize(12)
+        .font('Helvetica')
+        .text(`Service fee`, 340, 360, { align: 'left' })
+
+    doc 
+        .fontSize(12)
+        .font('Helvetica')
+        .text(`${booking.final_price * 0.1}`, 470, 360, { align: 'right' })
+    
+    doc 
+        .fontSize(12)
+        .font('Helvetica-Bold')
+        .text(`Total`, 340, 390, { align: 'left' })
+
+    doc 
+        .fontSize(14)
+        .font('Helvetica-Bold')
+        .text(`${(booking.final_price * 1.1).toFixed(2)}`, 470, 390, { align: 'right' })
+    
+    doc
+        .rect(
+            325, // x
+            440, // y
+            225, // width
+            140 // height
+        )
+        .strokeColor('#CCCCCC')
+        .stroke();
+    
+    doc 
+        .fontSize(16)
+        .font('Helvetica-Bold')
+        .text(`Payment`, 340, 460, { align: 'left' })
+    
+    doc 
+        .fontSize(12)
+        .font('Helvetica')
+        .text(`Paid with ${paymentMethod.description}`, 340, 490, { align: 'left' })
+
+    doc 
+        .fontSize(8)
+        .font('Helvetica')
+        .text(`${formattedBookingDate}`, 340, 505, { align: 'left' })
+
+    doc 
+        .fontSize(12)
+        .font('Helvetica')
+        .text(`${(booking.final_price * 1.1).toFixed(2)}`, 470, 490, { align: 'right' })
+
+    doc 
+        .fontSize(14)
+        .font('Helvetica-Bold')
+        .text(`Total paid`, 340, 540, { align: 'left' })
+
+    doc 
+        .fontSize(14)
+        .font('Helvetica-Bold')
+        .text(`${(booking.final_price * 1.1).toFixed(2)}`, 470, 540, { align: 'right' })
+    
+    doc
+        .fontSize(10)
+        .font('Helvetica-Bold')
+        .text('Cost per traveler ', 50, 595, )
+
+    doc
+        .fontSize(10)
+        .font('Helvetica')
+        .text('This trip was', 50, 610, { continued: true })
+        .font('Helvetica-Bold')
+        .text(` ${(booking.final_price * 1.1 / (booking.number_guests * nightsDifference)).toFixed(2)}`, { continued: true })
+        .font('Helvetica')
+        .text(' per person, per night,')
+        .moveDown(0.2)
+        .font('Helvetica')
+        .text('including taxes and other fees.')
+
+    // Draw a gray line
+    doc
+        .moveTo(50, 650) // Starting point
+        .lineTo(550, 650) // Ending point
+        .lineWidth(1) // Line width
+        .strokeColor('#CCCCCC') // Line color
+        .stroke(); // Draw the line
+    
+    // "Need Help?" text
+    doc 
+        .fontSize(12)
+        .font('Helvetica-Bold')
+        .text('Need Help?', 50, 670, { align: 'left' })
+
+    // "Accepted" text
+    doc 
+        .fontSize(12)
+        .font('Helvetica-Bold')
+        .text('Accepted', 50, 670, { align: 'right' })
+
+    // Booking ID
+    doc 
+        .fontSize(10)
+        .font('Helvetica')
+        .text(`ID: ${booking.booking_id}`, 50, 685, { align: 'right' })
+
+    
+    // End the PDF document generation
+    doc.end();
+}
+
+/**
  * Sends an invoice for a booking via email.
  * 
  * @param {Object} req - The request object.
@@ -412,284 +702,15 @@ exports.sendInvoice = async (req, res) => {
         // Create a temporary file path
         const tempDir = os.tmpdir();
         const tempFilePath = path.join(tempDir, `invoice_${req.body.booking_id}.pdf`);
-        
-        // Create a new PDF document
+
+        // Create a new PDF document and stream
         const doc = new PDFDocument();
         const pdfStream = fs.createWriteStream(tempFilePath);
         doc.pipe(pdfStream);
+
+        // Call the function to generate the invoice PDF
+        generateInvoicePDF(booking, paymentMethod, nightsDifference, nights, formattedDate, formattedCheckIndate, formattedCheckOutdate, formattedBookingDate, tempFilePath, doc)
         
-        // Fetch the logo image
-        const response = await axios.get('https://res.cloudinary.com/dc8ckrwlq/image/upload/v1717701427/logo/logo_gmail_wwgkzs.png', { responseType: 'arraybuffer' });
-
-        // Add the logo image to the document
-        doc.image(response.data, { width: 50, height: 50,  align: 'left' }  ); 
-        doc.fontSize(12).font('Helvetica-Bold').text(`Cozy Stay`, { align: 'right' });
-        doc.fontSize(12).font('Helvetica').text(`Escola Superior de Media Artes e Design - Politécnico do Porto`, { align: 'right'});
-        doc.fontSize(12).font('Helvetica').text(`R. Dom Sancho I 1, Argivai`, { align: 'right' });
-        doc.fontSize(12).font('Helvetica').text(`Portugal`, { align: 'right' })
-
-        // Draw a gray line
-        doc
-            .moveTo(50, 150) // Starting point
-            .lineTo(550, 150) // Ending point
-            .lineWidth(1) // Line width
-            .strokeColor('#CCCCCC') // Line color
-            .stroke(); // Draw the line
-
-        // Add confirmed booking details
-        doc
-            .fontSize(20)
-            .font('Helvetica-Bold')
-            .text(`Confirmed: ${nights} in ${booking.Property.dataValues.city}, ${booking.Property.dataValues.country}`, 50, 180, { align: 'left' });
-        
-        // Add booking user details
-        doc
-            .fontSize(12)
-            .font('Helvetica')
-            .text('Booked by ', 50, 220, { continued: true })
-            .font('Helvetica-Bold')
-            .text(booking.User.dataValues.name);
-
-        // Add booking date
-        doc 
-            .fontSize(10)
-            .font('Helvetica')
-            .text(formattedDate, 50, 240, { align: 'left' })
-
-        // Add booking status
-        doc 
-            .fontSize(12)
-            .font('Helvetica-Bold')
-            .text('Accepted', 50, 220, { align: 'right' })
-
-        // Add booking ID
-        doc 
-            .fontSize(10)
-            .font('Helvetica')
-            .text(`ID: ${booking.booking_id}`, 50, 235, { align: 'right' })
-
-        // Add rectangle for check-in and check-out dates
-        doc
-            .rect(
-                50, // x
-                280, // y
-                250, // width
-                300 // height
-            )
-            .strokeColor('#CCCCCC')
-            .stroke();
-
-        // Add check-in date
-        doc 
-            .fontSize(10)
-            .font('Helvetica-Bold')
-            .text('Check In', 70, 300, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica-Bold')
-            .text(formattedCheckIndate, 70, 310, { align: 'left' })
-
-        // Add arrow symbol
-        doc 
-            .fontSize(20)
-            .font('Helvetica')
-            .text('>', 170, 305, { align: 'left' })
-
-        // Add check-out date
-        doc 
-            .fontSize(10)
-            .font('Helvetica-Bold')
-            .text('Check Out', 210, 300, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica-Bold')
-            .text(formattedCheckOutdate, 210, 310, { align: 'left' })
-
-        // Add line separator
-        doc
-            .moveTo(70, 340) // Starting point
-            .lineTo(290, 340) // Ending point
-            .lineWidth(1) // Line width
-            .strokeColor('#CCCCCC') // Line color
-            .stroke(); // Draw the line
-
-        // Add property details
-        doc 
-            .fontSize(14)
-            .font('Helvetica-Bold')
-            .text(`${booking.Property.dataValues.title}`, 70, 360, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.Property.dataValues.address}`, 70, 380, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.Property.dataValues.typology}`, 70, 400, { align: 'left' })
-        
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.Property.dataValues.description}`, 70, 420, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.Property.dataValues.city},`, 70, 440, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.Property.dataValues.country}`, 70, 460, { align: 'left' })
-        
-        doc
-            .moveTo(70, 500) // Starting point
-            .lineTo(290, 500) // Ending point
-            .lineWidth(1) // Line width
-            .strokeColor('#CCCCCC') // Line color
-            .stroke(); // Draw the line
-        
-        doc 
-            .fontSize(14)
-            .font('Helvetica-Bold')
-            .text(`${booking.number_guests} Travelers on this trip`, 70, 530, { align: 'left' })
-
-        doc
-            .rect(
-                325, // x
-                280, // y
-                225, // width
-                140 // height
-            )
-            .strokeColor('#CCCCCC')
-            .stroke();
-        
-        doc 
-            .fontSize(16)
-            .font('Helvetica-Bold')
-            .text(`Charges`, 340, 300, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${(booking.final_price / nightsDifference).toFixed(2)} x ${nights}`, 340, 330, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.final_price}`, 470, 330, { align: 'right' })
-        
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`Service fee`, 340, 360, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.final_price * 0.1}`, 470, 360, { align: 'right' })
-        
-        doc 
-            .fontSize(12)
-            .font('Helvetica-Bold')
-            .text(`Total`, 340, 390, { align: 'left' })
-
-        doc 
-            .fontSize(14)
-            .font('Helvetica-Bold')
-            .text(`${(booking.final_price * 1.1).toFixed(2)}`, 470, 390, { align: 'right' })
-        
-        doc
-            .rect(
-                325, // x
-                440, // y
-                225, // width
-                140 // height
-            )
-            .strokeColor('#CCCCCC')
-            .stroke();
-        
-        doc 
-            .fontSize(16)
-            .font('Helvetica-Bold')
-            .text(`Payment`, 340, 460, { align: 'left' })
-        
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`Paid with ${paymentMethod.description}`, 340, 490, { align: 'left' })
-
-        doc 
-            .fontSize(8)
-            .font('Helvetica')
-            .text(`${formattedBookingDate}`, 340, 505, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${(booking.final_price * 1.1).toFixed(2)}`, 470, 490, { align: 'right' })
-
-        doc 
-            .fontSize(14)
-            .font('Helvetica-Bold')
-            .text(`Total paid`, 340, 540, { align: 'left' })
-
-        doc 
-            .fontSize(14)
-            .font('Helvetica-Bold')
-            .text(`${(booking.final_price * 1.1).toFixed(2)}`, 470, 540, { align: 'right' })
-        
-        doc
-            .fontSize(10)
-            .font('Helvetica-Bold')
-            .text('Cost per traveler ', 50, 595, )
-
-        doc
-            .fontSize(10)
-            .font('Helvetica')
-            .text('This trip was', 50, 610, { continued: true })
-            .font('Helvetica-Bold')
-            .text(` ${(booking.final_price * 1.1 / (booking.number_guests * nightsDifference)).toFixed(2)}`, { continued: true })
-            .font('Helvetica')
-            .text(' per person, per night,')
-            .moveDown(0.2)
-            .font('Helvetica')
-            .text('including taxes and other fees.')
-  
-        // Draw a gray line
-        doc
-            .moveTo(50, 650) // Starting point
-            .lineTo(550, 650) // Ending point
-            .lineWidth(1) // Line width
-            .strokeColor('#CCCCCC') // Line color
-            .stroke(); // Draw the line
-        
-        // "Need Help?" text
-        doc 
-            .fontSize(12)
-            .font('Helvetica-Bold')
-            .text('Need Help?', 50, 670, { align: 'left' })
-
-        // "Accepted" text
-        doc 
-            .fontSize(12)
-            .font('Helvetica-Bold')
-            .text('Accepted', 50, 670, { align: 'right' })
-
-        // Booking ID
-        doc 
-            .fontSize(10)
-            .font('Helvetica')
-            .text(`ID: ${booking.booking_id}`, 50, 685, { align: 'right' })
-
-        
-        // End the PDF document generation
-        doc.end();
-
         // Listen for the 'finish' event of the PDF stream, then sends an email with the generated invoice attached.
         pdfStream.on('finish', async () => {
             // Construct email options
@@ -835,279 +856,10 @@ exports.downloadInvoice = async (req, res) => {
         const doc = new PDFDocument();
         const pdfStream = fs.createWriteStream(tempFilePath);
         doc.pipe(pdfStream);
+
+        // Generate the invoice PDF
+        generateInvoicePDF(booking, paymentMethod, nightsDifference, nights, formattedDate, formattedCheckIndate, formattedCheckOutdate, formattedBookingDate, tempFilePath, doc)
         
-        // Fetch the logo image
-        const response = await axios.get('https://res.cloudinary.com/dc8ckrwlq/image/upload/v1717701427/logo/logo_gmail_wwgkzs.png', { responseType: 'arraybuffer' });
-
-        // Add the logo image to the document
-        doc.image(response.data, { width: 50, height: 50,  align: 'left' }  ); 
-        doc.fontSize(12).font('Helvetica-Bold').text(`Cozy Stay`, { align: 'right' });
-        doc.fontSize(12).font('Helvetica').text(`Escola Superior de Media Artes e Design - Politécnico do Porto`, { align: 'right'});
-        doc.fontSize(12).font('Helvetica').text(`R. Dom Sancho I 1, Argivai`, { align: 'right' });
-        doc.fontSize(12).font('Helvetica').text(`Portugal`, { align: 'right' })
-
-        // Draw a gray line
-        doc
-            .moveTo(50, 150) // Starting point
-            .lineTo(550, 150) // Ending point
-            .lineWidth(1) // Line width
-            .strokeColor('#CCCCCC') // Line color
-            .stroke(); // Draw the line
-
-        // Add confirmed booking details
-        doc
-            .fontSize(20)
-            .font('Helvetica-Bold')
-            .text(`Confirmed: ${nights} in ${booking.Property.dataValues.city}, ${booking.Property.dataValues.country}`, 50, 180, { align: 'left' });
-        
-        // Add booking user details
-        doc
-            .fontSize(12)
-            .font('Helvetica')
-            .text('Booked by ', 50, 220, { continued: true })
-            .font('Helvetica-Bold')
-            .text(booking.User.dataValues.name);
-
-        // Add booking date
-        doc 
-            .fontSize(10)
-            .font('Helvetica')
-            .text(formattedDate, 50, 240, { align: 'left' })
-
-        // Add booking status
-        doc 
-            .fontSize(12)
-            .font('Helvetica-Bold')
-            .text('Accepted', 50, 220, { align: 'right' })
-
-        // Add booking ID
-        doc 
-            .fontSize(10)
-            .font('Helvetica')
-            .text(`ID: ${booking.booking_id}`, 50, 235, { align: 'right' })
-
-        // Add rectangle for check-in and check-out dates
-        doc
-            .rect(
-                50, // x
-                280, // y
-                250, // width
-                300 // height
-            )
-            .strokeColor('#CCCCCC')
-            .stroke();
-
-        // Add check-in date
-        doc 
-            .fontSize(10)
-            .font('Helvetica-Bold')
-            .text('Check In', 70, 300, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica-Bold')
-            .text(formattedCheckIndate, 70, 310, { align: 'left' })
-
-        // Add arrow symbol
-        doc 
-            .fontSize(20)
-            .font('Helvetica')
-            .text('>', 170, 305, { align: 'left' })
-
-        // Add check-out date
-        doc 
-            .fontSize(10)
-            .font('Helvetica-Bold')
-            .text('Check Out', 210, 300, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica-Bold')
-            .text(formattedCheckOutdate, 210, 310, { align: 'left' })
-
-        // Add line separator
-        doc
-            .moveTo(70, 340) // Starting point
-            .lineTo(290, 340) // Ending point
-            .lineWidth(1) // Line width
-            .strokeColor('#CCCCCC') // Line color
-            .stroke(); // Draw the line
-
-        // Add property details
-        doc 
-            .fontSize(14)
-            .font('Helvetica-Bold')
-            .text(`${booking.Property.dataValues.title}`, 70, 360, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.Property.dataValues.address}`, 70, 380, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.Property.dataValues.typology}`, 70, 400, { align: 'left' })
-        
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.Property.dataValues.description}`, 70, 420, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.Property.dataValues.city},`, 70, 440, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.Property.dataValues.country}`, 70, 460, { align: 'left' })
-        
-        doc
-            .moveTo(70, 500) // Starting point
-            .lineTo(290, 500) // Ending point
-            .lineWidth(1) // Line width
-            .strokeColor('#CCCCCC') // Line color
-            .stroke(); // Draw the line
-        
-        doc 
-            .fontSize(14)
-            .font('Helvetica-Bold')
-            .text(`${booking.number_guests} Travelers on this trip`, 70, 530, { align: 'left' })
-
-        doc
-            .rect(
-                325, // x
-                280, // y
-                225, // width
-                140 // height
-            )
-            .strokeColor('#CCCCCC')
-            .stroke();
-        
-        doc 
-            .fontSize(16)
-            .font('Helvetica-Bold')
-            .text(`Charges`, 340, 300, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${(booking.final_price / nightsDifference).toFixed(2)} x ${nights}`, 340, 330, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.final_price}`, 470, 330, { align: 'right' })
-        
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`Service fee`, 340, 360, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${booking.final_price * 0.1}`, 470, 360, { align: 'right' })
-        
-        doc 
-            .fontSize(12)
-            .font('Helvetica-Bold')
-            .text(`Total`, 340, 390, { align: 'left' })
-
-        doc 
-            .fontSize(14)
-            .font('Helvetica-Bold')
-            .text(`${(booking.final_price * 1.1).toFixed(2)}`, 470, 390, { align: 'right' })
-        
-        doc
-            .rect(
-                325, // x
-                440, // y
-                225, // width
-                140 // height
-            )
-            .strokeColor('#CCCCCC')
-            .stroke();
-        
-        doc 
-            .fontSize(16)
-            .font('Helvetica-Bold')
-            .text(`Payment`, 340, 460, { align: 'left' })
-        
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`Paid with ${paymentMethod.description}`, 340, 490, { align: 'left' })
-
-        doc 
-            .fontSize(8)
-            .font('Helvetica')
-            .text(`${formattedBookingDate}`, 340, 505, { align: 'left' })
-
-        doc 
-            .fontSize(12)
-            .font('Helvetica')
-            .text(`${(booking.final_price * 1.1).toFixed(2)}`, 470, 490, { align: 'right' })
-
-        doc 
-            .fontSize(14)
-            .font('Helvetica-Bold')
-            .text(`Total paid`, 340, 540, { align: 'left' })
-
-        doc 
-            .fontSize(14)
-            .font('Helvetica-Bold')
-            .text(`${(booking.final_price * 1.1).toFixed(2)}`, 470, 540, { align: 'right' })
-        
-        doc
-            .fontSize(10)
-            .font('Helvetica-Bold')
-            .text('Cost per traveler ', 50, 595, )
-
-        doc
-            .fontSize(10)
-            .font('Helvetica')
-            .text('This trip was', 50, 610, { continued: true })
-            .font('Helvetica-Bold')
-            .text(` ${(booking.final_price * 1.1 / (booking.number_guests * nightsDifference)).toFixed(2)}`, { continued: true })
-            .font('Helvetica')
-            .text(' per person, per night,')
-            .moveDown(0.2)
-            .font('Helvetica')
-            .text('including taxes and other fees.')
-  
-        // Draw a gray line
-        doc
-            .moveTo(50, 650) // Starting point
-            .lineTo(550, 650) // Ending point
-            .lineWidth(1) // Line width
-            .strokeColor('#CCCCCC') // Line color
-            .stroke(); // Draw the line
-        
-        // "Need Help?" text
-        doc 
-            .fontSize(12)
-            .font('Helvetica-Bold')
-            .text('Need Help?', 50, 670, { align: 'left' })
-
-        // "Accepted" text
-        doc 
-            .fontSize(12)
-            .font('Helvetica-Bold')
-            .text('Accepted', 50, 670, { align: 'right' })
-
-        // Booking ID
-        doc 
-            .fontSize(10)
-            .font('Helvetica')
-            .text(`ID: ${booking.booking_id}`, 50, 685, { align: 'right' })
-
-        
-        // End the PDF document generation
-        doc.end();
-
         // Once the PDF is generated, send it as a response
         pdfStream.on('finish', async () => {
             res.download(tempFilePath);
