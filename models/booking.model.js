@@ -109,6 +109,10 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING(255),
             allowNull: true,
         },
+        cloudinary_invoice_id: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
         number_guests: {
             type: DataTypes.INTEGER,
             allowNull: false,
