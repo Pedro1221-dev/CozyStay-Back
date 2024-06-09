@@ -84,8 +84,14 @@ npm install axios
 npm install jest
 ```
 
+### pdfkit
+
+```sh
+npm install pdfkit
+```
+
 # Bulk Package Installation
 
 ```sh
-npm install cors dotenv express sequelize mysql2 bcrypt jsonwebtoken nodemailer cloudinary multer axios jest
+npm install cors dotenv express sequelize mysql2 bcrypt jsonwebtoken nodemailer cloudinary multer axios jest pdfkit
 ```
