@@ -4,7 +4,7 @@ const db = require("../models/index.js");
 const Booking = db.booking;
 
 //"Op" necessary for LIKE operator
-const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
+const { Op, ValidationError, UniqueConstraintError, Sequelize } = require('sequelize');
 
 // Importing the uploadImage and destroy functions from the cloudinary utilities
 const { uploadImage, deleteImage } = require('../utilities/cloudinary');
@@ -95,6 +95,87 @@ exports.create = async (req, res) => {
 
         // Set the booking_date in the req.body object
         req.body.booking_date = new Date();
+
+        // Count the number of bookings the user has made
+        const bookingCount = await db.booking.count({ 
+            where: { 
+                guest_id 
+            } 
+        });
+
+        // Find the user by ID
+        let user = await db.user.findOne({ 
+            where: { 
+                user_id: guest_id 
+            } 
+        });
+
+        // Define badge IDs
+        const firstTimeBookerBadge = 4;     // Badge when user books 1st property
+        const bookerAdventurerBadge = 5;    // Badge when user books 3rd property
+        const bookingMaestroBadge = 6;      // Badge when user books 5th property
+
+        // Check the booking count and update badges accordingly
+        if (bookingCount === 0) {
+            // Add the first time booker badge
+            await user.addBadge(firstTimeBookerBadge);
+        } else if (bookingCount === 2) {
+            // Remove the first time bookerbadge
+            await user.removeBadge(firstTimeBookerBadge);
+            // Add the booker adventurer badge
+            await user.addBadge(bookerAdventurerBadge);
+        } else if (bookingCount === 4) {
+            // Remove the booker adventurer badge
+            await user.removeBadge(bookerAdventurerBadge);
+            // Add the booking maestro badge
+            await user.addBadge(bookingMaestroBadge);
+        }
+
+        // Fetch all countries the user has booked properties in
+        const userBookings = await db.booking.findAll({
+            where: { guest_id },
+            include: [{
+                model: db.property,
+                attributes: ["country"],
+            }],
+        });
+
+        // Initialize an empty list to store unique countries
+        const uniqueCountriesList = [];
+
+        // Iterate over the bookings to extract the countries and add them to the list
+        userBookings.forEach(booking => {
+            const country = booking.Property.country;
+            // Check if the country is not already in the list before adding it
+            if (!uniqueCountriesList.includes(country)) {
+                uniqueCountriesList.push(country);
+            }
+        });
+
+        // Get the number of unique countries by counting the length of the list
+        const numberOfUniqueCountries = uniqueCountriesList.length;
+
+        // Define badge IDs
+        const adventureSeekerBadge = 13;     // Badge awarded when user books properties in 2 unique country
+        const crossCountryBadge = 14;        // Badge awarded when user books properties in 4 unique countries
+        const worldTravelerBadge = 15;       // Badge awarded when user books properties in 6 unique countries
+
+        // Check the booking count and update badges accordingly
+        // Check the number of unique countries and update badges accordingly
+        if (numberOfUniqueCountries === 1) {
+            // Add the Adventure Seeker badge
+            await user.addBadge(adventureSeekerBadge);
+        } else if (numberOfUniqueCountries === 3) {
+            // Remove the Adventure Seeker badge
+            await user.removeBadge(adventureSeekerBadge);
+            // Add the Cross-Country badge
+            await user.addBadge(crossCountryBadge);
+        } else if (numberOfUniqueCountries === 5) {
+            // Remove the Cross-Country badge
+            await user.removeBadge(crossCountryBadge);
+            // Add the World Traveler badge
+            await user.addBadge(worldTravelerBadge);
+        }
 
         // Check if check-out date is greater than check-in date
         if (new Date(check_out_date) <= new Date(check_in_date)) {
@@ -312,6 +393,38 @@ exports.rateBooking = async (req, res) => {
                 success: false,
                 msg: `The booking cannot be rated until the check-out date`
             });
+        }
+
+        // Fetch the user who made the booking
+        const user = await db.user.findByPk(booking.guest_id);
+
+        // Count the number of bookings the user has rated
+        const ratedBookingsCount = await db.booking.count({
+            where: { 
+                guest_id: booking.guest_id,
+                number_stars: { [Op.ne]: null } // Consider only bookings with a non-null number of stars
+            }
+        });
+       
+        // Define badge IDs
+        const reviewRookieBadge = 10;           // Badge when user rates their 1st booking
+        const reviewContributorBadge = 11;      // Badge when user rates their 3rd booking
+        const reviewGuruBadge = 12;             // Badge when user rates their 5th booking
+
+        // Check the number of rated bookings and update badges accordingly
+        if (ratedBookingsCount === 0) {
+            // Add the Review Rookie badge
+            await user.addBadge(reviewRookieBadge);
+        } else if (ratedBookingsCount === 2) {
+            // Remove the Review Rookie badge
+            await user.removeBadge(reviewRookieBadge);
+            // Add the Review Contributor badge
+            await user.addBadge(reviewContributorBadge);
+        } else if (ratedBookingsCount === 4) {
+            // Remove the Review Contributor badge
+            await user.removeBadge(reviewContributorBadge);
+            // Add the Review Guru badge
+            await user.addBadge(reviewGuruBadge);
         }
 
         // Update the booking with the provided number of stars, comment, and current date as the rating date
