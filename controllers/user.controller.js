@@ -1405,7 +1405,7 @@ exports.findFavoritePropertiesCurrent = async (req, res) => {
         });
 
         // If no favorite properties found for the user, return a 404 response
-        if (favorites.length === 0) {
+        if (favorites[0].favoriteProperty.length === 0) {
             return res.status(404).json({
                 success: false, 
                 msg: `Favorite properties for user with ID ${user_id} not found.`
