@@ -692,7 +692,7 @@ exports.verifyEmail = async (req, res) => {
 
         // If OTP record not found, return an error
         if (!otpRecord) {
-            return res.status(400).json({
+            return res.status(404).json({
                 success: false,
                 msg: "Account record doesn't exist or has been verified already."
             });
