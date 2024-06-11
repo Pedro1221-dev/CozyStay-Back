@@ -1339,6 +1339,9 @@ exports.findBookingsCurrent = async (req, res) => {
         // Find bookings by owner ID
         let bookings = await Booking.findAll({ 
             where: whereClause,
+            include: {
+                model: db.property,
+            }
         });
 
         // If no bookings found for the owner, return a 404 response
@@ -1398,7 +1401,13 @@ exports.findFavoritePropertiesCurrent = async (req, res) => {
                 {
                     model: db.property,
                     as: 'favoriteProperty',
-                }
+                    include: [
+                        {
+                            model: db.photo,
+                            as: 'photos'
+                        },
+                    ]
+                },
             ],
             attributes: [] // Exclude other attributes of the user
 
@@ -1411,7 +1420,7 @@ exports.findFavoritePropertiesCurrent = async (req, res) => {
                 msg: `Favorite properties for user with ID ${user_id} not found.`
             });
         }
-
+        
         // If favorite properties are found, return them along with links for actions (HATEOAS)
         res.status(200).json({ 
             success: true, 
@@ -1423,6 +1432,7 @@ exports.findFavoritePropertiesCurrent = async (req, res) => {
 
     }
     catch (err) {
+        console.log(err);
         // If an error occurs, return a 500 response with an error message
         return res.status(500).json({ 
             success: false, 
