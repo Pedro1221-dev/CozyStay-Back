@@ -441,6 +441,18 @@ exports.updateCurrent = async (req, res) => {
                 success: false, msg: `You are not authorized to change the user type.`
             });
         }
+
+        if(req.body.password || req.body.confirmPassword) {
+            // Check if passwords match
+            if (!(req.body.password === req.body.confirmPassword)) {
+                return res.status(400).json({
+                    msg: 'Passwords do not match'
+                });
+            }
+            // Hash the password
+            const hashedPassword = await bcrypt.hash(req.body.password, 10);
+            req.body.password = hashedPassword
+        }
         
         // If there are files attached to the request, process them
         if (req.files) {
@@ -493,7 +505,7 @@ exports.updateCurrent = async (req, res) => {
 
         // If no rows were affected, return a success message indicating no updates were made
         if(affectedRows[0] === 0){
-            return res.status(404).json({
+            return res.status(200).json({
                 success: true, 
                 msg: `No updates were made to user with ID ${user_id}.`
             });
