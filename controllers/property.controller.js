@@ -789,7 +789,7 @@ exports.update = async (req, res) => {
 
         // If no rows were affected, return a success message indicating no updates were made
         if (affectedRows[0] === 0) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: true,
                 msg: `No updates were made to property with ID ${req.params.property_id}.`
             });
