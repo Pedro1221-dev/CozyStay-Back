@@ -986,9 +986,9 @@ exports.confirm = async (req, res) => {
             });
         }
 
-        // If property status is already 'available', return a 404 error response
+        // If property status is already 'available', return a 400 error response
         if (property.status === 'available') {
-            return res.status(404).json({
+            return res.status(400).json({
                 success: false,
                 msg: "Property request already confirmed"
             });
@@ -1000,7 +1000,7 @@ exports.confirm = async (req, res) => {
         })
 
         // Return a success message, along with the confirmed property details
-        res.status(201).json({
+        res.status(200).json({
             success: true,
             msg: "Property request confirmed", property,
 
