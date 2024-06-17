@@ -828,6 +828,13 @@ exports.create = async (req, res) => {
         // Extracts the properties from the request body
         const { owner_id, title, city, country, address, number_bedrooms, number_beds, number_bathrooms, number_guests_allowed, description, typology, price, facilities, payment_methods } = req.body;
 
+        if (!owner_id) {
+            return res.status(400).json({
+                success: false,
+                msg: "Owner id is required."
+            });
+        }
+
         // Count the number of properties the user owns
         const propertyCount = await Property.count({
             where: {
