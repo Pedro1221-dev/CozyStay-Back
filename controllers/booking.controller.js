@@ -319,8 +319,10 @@ exports.delete = async (req, res) => {
                 msg: `The booking cannot be canceled within 2 days of check-in.`
             });
         } else if (differenceInDays <= 7) {
-            // Delete the invoice
-            await deleteImage(booking.cloudinary_invoice_id)
+            if (booking.cloudinary_invoice_id) {
+                // Delete the invoice
+                await deleteImage(booking.cloudinary_invoice_id)
+            }
 
             // Cancel the booking and return 50% refund
             await db.booking.destroy({
@@ -334,8 +336,10 @@ exports.delete = async (req, res) => {
                 refundAmount: refundAmount * 0.5
             });
         } else {
-            // Delete the invoice
-            await deleteImage(booking.cloudinary_invoice_id)
+            if (booking.cloudinary_invoice_id) {
+                // Delete the invoice
+                await deleteImage(booking.cloudinary_invoice_id)
+            }
             // Cancel the booking and return full refund
             const result = await db.booking.destroy({
                 where: { booking_id: req.params.booking_id }
