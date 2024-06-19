@@ -789,7 +789,7 @@ exports.update = async (req, res) => {
 
         // If no rows were affected, return a success message indicating no updates were made
         if (affectedRows[0] === 0) {
-            return res.status(404).json({
+            return res.status(200).json({
                 success: true,
                 msg: `No updates were made to property with ID ${req.params.property_id}.`
             });
@@ -832,6 +832,13 @@ exports.create = async (req, res) => {
 
         // Set the guest_id in the req.body object
         req.body.owner_id = owner_id;
+
+        if (!owner_id) {
+            return res.status(400).json({
+                success: false,
+                msg: "Owner id is required."
+            });
+        }
 
         // Count the number of properties the user owns
         const propertyCount = await Property.count({
@@ -982,9 +989,9 @@ exports.confirm = async (req, res) => {
             });
         }
 
-        // If property status is already 'available', return a 404 error response
+        // If property status is already 'available', return a 400 error response
         if (property.status === 'available') {
-            return res.status(404).json({
+            return res.status(400).json({
                 success: false,
                 msg: "Property request already confirmed"
             });
@@ -996,7 +1003,7 @@ exports.confirm = async (req, res) => {
         })
 
         // Return a success message, along with the confirmed property details
-        res.status(201).json({
+        res.status(200).json({
             success: true,
             msg: "Property request confirmed", property,
 

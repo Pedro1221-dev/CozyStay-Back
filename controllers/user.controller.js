@@ -441,6 +441,18 @@ exports.updateCurrent = async (req, res) => {
                 success: false, msg: `You are not authorized to change the user type.`
             });
         }
+
+        if(req.body.password || req.body.confirmPassword) {
+            // Check if passwords match
+            if (!(req.body.password === req.body.confirmPassword)) {
+                return res.status(400).json({
+                    msg: 'Passwords do not match'
+                });
+            }
+            // Hash the password
+            const hashedPassword = await bcrypt.hash(req.body.password, 10);
+            req.body.password = hashedPassword
+        }
         
         // If there are files attached to the request, process them
         if (req.files) {
@@ -493,7 +505,7 @@ exports.updateCurrent = async (req, res) => {
 
         // If no rows were affected, return a success message indicating no updates were made
         if(affectedRows[0] === 0){
-            return res.status(404).json({
+            return res.status(200).json({
                 success: true, 
                 msg: `No updates were made to user with ID ${user_id}.`
             });
@@ -692,7 +704,7 @@ exports.verifyEmail = async (req, res) => {
 
         // If OTP record not found, return an error
         if (!otpRecord) {
-            return res.status(400).json({
+            return res.status(404).json({
                 success: false,
                 msg: "Account record doesn't exist or has been verified already."
             });
@@ -1339,6 +1351,9 @@ exports.findBookingsCurrent = async (req, res) => {
         // Find bookings by owner ID
         let bookings = await Booking.findAll({ 
             where: whereClause,
+            include: {
+                model: db.property,
+            }
         });
 
         // If no bookings found for the owner, return a 404 response
@@ -1398,20 +1413,26 @@ exports.findFavoritePropertiesCurrent = async (req, res) => {
                 {
                     model: db.property,
                     as: 'favoriteProperty',
-                }
+                    include: [
+                        {
+                            model: db.photo,
+                            as: 'photos'
+                        },
+                    ]
+                },
             ],
             attributes: [] // Exclude other attributes of the user
 
         });
 
         // If no favorite properties found for the user, return a 404 response
-        if (favorites.length === 0) {
+        if (favorites[0].favoriteProperty.length === 0) {
             return res.status(404).json({
                 success: false, 
                 msg: `Favorite properties for user with ID ${user_id} not found.`
             });
         }
-
+        
         // If favorite properties are found, return them along with links for actions (HATEOAS)
         res.status(200).json({ 
             success: true, 
@@ -1423,6 +1444,7 @@ exports.findFavoritePropertiesCurrent = async (req, res) => {
 
     }
     catch (err) {
+        console.log(err);
         // If an error occurs, return a 500 response with an error message
         return res.status(500).json({ 
             success: false, 
