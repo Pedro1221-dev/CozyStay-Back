@@ -1112,6 +1112,30 @@ exports.findOneCurrent = async (req, res) => {
             }
         });
 
+        // Fetch all countries the user has booked properties in
+        const userBookings = await db.booking.findAll({
+            where: { guest_id: userId },
+            include: [{
+                model: db.property,
+                attributes: ["country"],
+            }],
+        });
+
+        // Initialize an empty list to store unique countries
+        const uniqueCountriesList = [];
+
+        // Iterate over the bookings to extract the countries and add them to the list
+        userBookings.forEach(booking => {
+            const country = booking.Property.country;
+            // Check if the country is not already in the list before adding it
+            if (!uniqueCountriesList.includes(country)) {
+                uniqueCountriesList.push(country);
+            }
+        });
+
+        // Get the number of unique countries by counting the length of the list
+        const numberOfUniqueCountries = uniqueCountriesList.length;
+
         // Add the user type to the user object
         user.dataValues.userType = userType;
         // Add total property reviews to the user object
@@ -1124,6 +1148,11 @@ exports.findOneCurrent = async (req, res) => {
         user.dataValues.totalRentedProperties = totalRentedProperties;
         // Add total owned properties to the user object
         user.dataValues.totalOwnedProperties = totalOwnedProperties;
+        // Add total favorite properties to the user object
+        user.dataValues.totalFavoriteProperties = user.favoriteProperty.length
+        // Add total unique countries to the user object
+        user.dataValues.totalUniqueCountries = numberOfUniqueCountries
+
 
         // If user is found, return it along with links for actions (HATEOAS)
         res.status(200).json({ 
@@ -1138,6 +1167,7 @@ exports.findOneCurrent = async (req, res) => {
 
     }
     catch (err) {
+        console.log(err);
         // If an error occurs, return a 500 response with an error message
         return res.status(500).json({ 
             success: false, 
