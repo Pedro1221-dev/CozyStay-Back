@@ -24,14 +24,14 @@ const axios = require('axios');
 
 // Nodemailer Stuff
 let transporter = nodemailer.createTransport({
-    service: 'hotmail',
+    host: 'smtp.outlook.com',
+    port: 587,
+    secure: false, 
     auth: {
         user: process.env.AUTH_EMAIL, 
         pass: process.env.AUTH_PASS, 
     }
 });
-
-
 
 
 /**
