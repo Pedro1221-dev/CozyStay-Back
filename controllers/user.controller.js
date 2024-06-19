@@ -1353,6 +1353,12 @@ exports.findBookingsCurrent = async (req, res) => {
             where: whereClause,
             include: {
                 model: db.property,
+                include: [
+                    {
+                        model: db.photo,
+                        as: 'photos'
+                    },
+                ]
             }
         });
 
