@@ -29,10 +29,9 @@ const { uploadImage, deleteImage }  = require('../utilities/cloudinary');
 //"Op" necessary for LIKE operator
 const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
 
-
 // Nodemailer Stuff
 let transporter = nodemailer.createTransport({
-    host: 'smtp.office365.com',
+    host: 'smtp.outlook.com',
     port: 587,
     secure: false, 
     auth: {
@@ -41,14 +40,8 @@ let transporter = nodemailer.createTransport({
     }
 });
 
-
-
-
 transporter.verify((error, success) => {
     if (error) {
-        
-        console.log("EMAIL" , process.env.AUTH_EMAIL);
-        console.log("PASS" , process.env.AUTH_PASS);
         console.log(error);
     } else {
         console.log("Ready for message");

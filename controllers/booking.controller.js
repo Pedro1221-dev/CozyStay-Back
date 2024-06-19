@@ -24,7 +24,7 @@ const axios = require('axios');
 
 // Nodemailer Stuff
 let transporter = nodemailer.createTransport({
-    host: 'smtp.office365.com',
+    host: 'smtp.outlook.com',
     port: 587,
     secure: false, 
     auth: {
