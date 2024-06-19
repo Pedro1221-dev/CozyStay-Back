@@ -257,7 +257,9 @@ exports.create = async (req, res) => {
         res.status(201).json({
             success: true,
             msg: "Booking successfully created.",
-            booking_id: newBooking.booking_id,
+            data: {
+                booking_id: newBooking.booking_id,
+            },
             links: [
                 { "rel": "self", "href": `/bookings/${newBooking.booking_id}`, "method": "GET" },
                 { "rel": "delete", "href": `/bookings/${newBooking.booking_id}`, "method": "DELETE" },
