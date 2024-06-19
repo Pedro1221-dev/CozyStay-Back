@@ -40,6 +40,10 @@ let transporter = nodemailer.createTransport({
     }
 });
 
+console.log(process.env.AUTH_EMAIL);
+console.log(process.env.AUTH_PASS);
+
+
 transporter.verify((error, success) => {
     if (error) {
         console.log(error);
