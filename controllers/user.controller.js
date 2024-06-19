@@ -31,9 +31,7 @@ const { Op, ValidationError, UniqueConstraintError } = require('sequelize');
 
 // Nodemailer Stuff
 let transporter = nodemailer.createTransport({
-    host: 'smtp-mail.outlook.com',
-    port: 587,
-    secure: false, 
+    service: 'hotmail',
     auth: {
         user: process.env.AUTH_EMAIL, 
         pass: process.env.AUTH_PASS, 
