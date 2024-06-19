@@ -51,7 +51,7 @@ module.exports = (sequelize, DataTypes) => {
                 isDate: true, 
                 //isAfter: { args: new Date().toISOString(), msg: 'Check-in date must be after current date' }, 
                 customValidator(value) {
-                    if (value <= this.booking_date) {
+                    if (value < this.booking_date) {
                         throw new Error('Check-in date must be after booking date'); 
                     }
                 }
