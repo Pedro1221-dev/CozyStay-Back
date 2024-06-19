@@ -886,7 +886,7 @@ exports.forgotPassword = async (req, res) => {
         const token = crypto.randomBytes(Math.ceil(128 / 2)).toString('hex').slice(0, 128);
         
         // Construct the reset URL
-        const resetUrl = `${req.protocol}://${req.get('host')}/reset-password/${token}`
+        const resetUrl = `http://localhost:5173/reset-password/${token}`
 
         /// Read the email template from file
         const emailTemplate = fs.readFileSync('./html/email_forgot_password.html', 'utf8');
