@@ -826,7 +826,12 @@ exports.update = async (req, res) => {
 exports.create = async (req, res) => {
     try {
         // Extracts the properties from the request body
-        const { owner_id, title, city, country, address, number_bedrooms, number_beds, number_bathrooms, number_guests_allowed, description, typology, price, facilities, payment_methods } = req.body;
+        const { title, city, country, address, number_bedrooms, number_beds, number_bathrooms, number_guests_allowed, description, typology, price, facilities, payment_methods } = req.body;
+
+        const owner_id = req.userData.user_id;
+
+        // Set the guest_id in the req.body object
+        req.body.owner_id = owner_id;
 
         // Count the number of properties the user owns
         const propertyCount = await Property.count({
@@ -916,19 +921,17 @@ exports.create = async (req, res) => {
 
         // If the user inserts facilities
         if (facilities) {
-            // Extract facility_ids from the array of facilities objects
-            const facilitiesIds = facilities.map(facility => facility.facility_id);
-
-            // Associate the extracted facilitiy IDs with the newly created property
+            // Split the facilities string by comma and convert each element to a number
+            const facilitiesIds = facilities.split(',').map(Number);
+            // Add the facilities to the new property
             await newProperty.addFacilities(facilitiesIds);
         }
 
-        // If the user payment methods
+        // If the user inserts payment methods
         if (payment_methods) {
-            // Extract payment_methods_ids from the array of payment_methods objects
-            const payment_methods_ids = payment_methods.map(payment_method => payment_method.payment_method_id)
-
-            // Associate the extracted payment_method IDs with the newly created property
+            // Split the payment_methods string by comma and convert each element to a number
+            const payment_methods_ids = payment_methods.split(',').map(Number);
+            // Add the payment methods to the new property
             await newProperty.addPaymentMethod(payment_methods_ids);
         }
 
