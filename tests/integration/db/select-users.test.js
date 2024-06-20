@@ -6,7 +6,7 @@ console.log(dbConfig);
 
 //console.log(sequelize);
 
-describe('Select all users', () => {
+describe('Database Integration Tests - Select All Users', () => {
     // Before all tests, connect to the database
     beforeAll(async () => {
         try {
@@ -29,7 +29,7 @@ describe('Select all users', () => {
         }
     });
 
-    test('Select all the users', async () => {
+    test('Fetch all users from the database', async () => {
         try {
                 // Insert a new user using Sequelize query method
                 const result = await sequelize.query(`

@@ -6,7 +6,7 @@ console.log(dbConfig);
 
 //console.log(sequelize);
 
-describe('Insert User into Database', () => {
+describe('Database Integration Tests - Insert User into Database', () => {
     // Before all tests, connect to the database
     beforeAll(async () => {
         try {
