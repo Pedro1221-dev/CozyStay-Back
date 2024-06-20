@@ -305,7 +305,8 @@ exports.findOne = async (req, res) => {
 
         // Get the number of unique countries by counting the length of the list
         const numberOfUniqueCountries = uniqueCountriesList.length;
-        
+        // Add total property reviews to the user object
+        user.dataValues.totalPropertyReviews = totalPropertyReviews;
         // Add average property rating to the user object
         user.dataValues.averagePropertyRating = averagePropertyRating;
         // Add total guest reviews to the user object
