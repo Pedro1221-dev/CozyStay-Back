@@ -1271,7 +1271,10 @@ exports.findProperties = async (req, res) => {
 
         // Find properties by owner ID
         let properties = await Property.findAll({ 
-            where: { owner_id: owner_id  },
+            where: { 
+                owner_id: owner_id,
+                status: 'available' 
+            },
             include: [
                 {
                     model: db.paymentMethod,
