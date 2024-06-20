@@ -313,6 +313,11 @@ exports.findAll = async (req, res) => {
                     as: 'rating',
                     attributes: ["number_stars"],
                 },
+                {
+                    model: db.user,
+                    attributes: ["user_id", "name"], 
+                    as: 'owner'
+                }
                 /* {
                     model: db.user,
                     attributes: { exclude: ['password'] }, // Exclude the password attribute
@@ -347,6 +352,7 @@ exports.findAll = async (req, res) => {
             const averageRating = totalStars / numValidRatings;
             // Add the average rating to each property
             property.dataValues.averageRating = averageRating;
+            property.dataValues.totalNumberReviews = numValidRatings
         }
 
         // Calculate the total number of properties after applying pagination
