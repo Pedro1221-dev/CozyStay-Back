@@ -301,7 +301,7 @@ exports.findAll = async (req, res) => {
             limit: limit,
             offset: offset,
             ...searchOptions,
-            attributes: ["property_id", "city", "country", "title", "price", "number_bedrooms", "number_beds"],
+            attributes: ["property_id", "city", "country", "title", "price", "number_bedrooms", "number_beds", "status"],
             include: [
                  {
                     model: db.photo,
