@@ -188,7 +188,7 @@ describe('Email Verification', () => {
         }
     });
 
-    test.only('should successfully verify email with valid user_id and otp and remove the otp record from the database', async () => {
+    test('should successfully verify email with valid user_id and otp and remove the otp record from the database', async () => {
         // Define valid user_id and otp
         const requestBody = {
             user_id: 483,

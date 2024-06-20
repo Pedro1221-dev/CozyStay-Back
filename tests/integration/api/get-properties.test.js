@@ -9,7 +9,7 @@ describe('Get User Properties', () => {
         try {
             const userData = {
                 name: 'John Doe',
-                email: 'example5@mail.com',
+                email: 'example20@mail.com',
                 password: 'Password123!',
                 nationality: 'portuguese',
                 vat_number: '12345678912343134' 

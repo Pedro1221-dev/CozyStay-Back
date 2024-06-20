@@ -104,7 +104,7 @@ describe('Verify administrator role', () => {
     beforeAll(async () => {
         const userData = {
             name: 'John Doe',
-            email: 'example4@mail.com',
+            email: 'example10@mail.com',
             password: 'Password123!',
             nationality: 'portuguese',
             vat_number: '12345678912343134' 
@@ -115,7 +115,7 @@ describe('Verify administrator role', () => {
             userIdToUpdate = response.data.data.user_id;
 
             const loginData = {
-                email: 'example4@mail.com',
+                email: 'example10@mail.com',
                 password: 'Password123!',
             };
             const responseLogin = await axios.post('http://127.0.0.1:3000/users/login', loginData);
@@ -226,7 +226,7 @@ describe('Edit a specific user', () => {
         try {
             const userData = {
                 name: 'John Doe',
-                email: 'example4@mail.com',
+                email: 'example12@mail.com',
                 password: 'Password123!',
                 nationality: 'portuguese',
                 vat_number: '12345678912343134' 
@@ -347,7 +347,7 @@ describe('Edit a specific user', () => {
         }
     });
 
-    test.only('Send a request to update user password with a valid new password', async () => {
+    test('Send a request to update user password with a valid new password', async () => {
         const updateData = {
             password: 'NewPassword456!'
         };
