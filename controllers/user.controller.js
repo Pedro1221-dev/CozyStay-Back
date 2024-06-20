@@ -216,6 +216,7 @@ exports.findAll = async (req, res) => {
  */
 exports.findOne = async (req, res) => {
     try {
+        const userId = req.params.user_id;
         let user = await User.findByPk(req.params.user_id, {
             attributes: { exclude: ['password'] }, // Exclude the password attribute
             include: [
@@ -239,6 +240,85 @@ exports.findOne = async (req, res) => {
                 }, 
             ]
         });
+
+        // Count the total number of properties owned by the user
+        const totalOwnedProperties = await db.property.count({ where: { owner_id: userId } });
+        
+        // Count the total number of properties rented by the user
+        const totalRentedProperties = await db.booking.count({ where: { guest_id: userId } });
+
+         // Find all properties owned by the user
+         const userProperties = await db.property.findAll({
+            where: { owner_id: userId }
+        });
+
+        // Initialize variables to calculate total property reviews and sum of ratings
+        let totalPropertyReviews = 0;
+        let totalRatings = 0;
+
+        // Loop through each property owned by the user
+        for (const property of userProperties) {
+            // Find and count bookings for the current property with reviews (number_stars not null)
+            const { count: totalRentedProperties, rows: bookingsWithReviews } = await db.booking.findAndCountAll({
+                where: { 
+                    property_id: property.property_id,
+                    number_stars: { [Op.ne]: null } 
+                }
+            });
+            // Add the count of reviews for the current property to the total
+            totalPropertyReviews += totalRentedProperties;
+            // Calculate sum of ratings for the current property
+            totalRatings += bookingsWithReviews.reduce((acc, booking) => acc + booking.number_stars, 0);
+        }
+
+        // Calculate average rating for properties owned by the user
+        const averagePropertyRating = totalPropertyReviews > 0 ? totalRatings / totalPropertyReviews : 0;
+
+        // Count the total number of reviews made by the user as a guest
+        const totalGuestReviews = await db.booking.count({
+            where: { 
+                guest_id: userId,
+                number_stars: { [Op.ne]: null } 
+            }
+        });
+
+        // Fetch all countries the user has booked properties in
+        const userBookings = await db.booking.findAll({
+            where: { guest_id: userId },
+            include: [{
+                model: db.property,
+                attributes: ["country"],
+            }],
+        });
+
+        // Initialize an empty list to store unique countries
+        const uniqueCountriesList = [];
+
+        // Iterate over the bookings to extract the countries and add them to the list
+        userBookings.forEach(booking => {
+            const country = booking.Property.country;
+            // Check if the country is not already in the list before adding it
+            if (!uniqueCountriesList.includes(country)) {
+                uniqueCountriesList.push(country);
+            }
+        });
+
+        // Get the number of unique countries by counting the length of the list
+        const numberOfUniqueCountries = uniqueCountriesList.length;
+        
+        // Add average property rating to the user object
+        user.dataValues.averagePropertyRating = averagePropertyRating;
+        // Add total guest reviews to the user object
+        user.dataValues.totalGuestReviews = totalGuestReviews;
+        // Add total rented properties to the user object
+        user.dataValues.totalRentedProperties = totalRentedProperties;
+        // Add total owned properties to the user object
+        user.dataValues.totalOwnedProperties = totalOwnedProperties;
+        // Add total favorite properties to the user object
+        user.dataValues.totalFavoriteProperties = user.favoriteProperty.length
+        // Add total unique countries to the user object
+        user.dataValues.totalUniqueCountries = numberOfUniqueCountries
+
 
         // If the user is not found, return a 404 response
         if (!user) {
